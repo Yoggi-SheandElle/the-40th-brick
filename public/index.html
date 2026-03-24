@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>The 40th Brick</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <!-- Phaser 3 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <!-- Socket.io client -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <!-- Game data -->
+  <script src="js/constants.js"></script>
+  <script src="js/data/achievements.js"></script>
+  <script src="js/data/quotes.js"></script>
+
+  <!-- Game modules -->
+  <script src="js/network.js"></script>
+  <script src="js/helpers.js"></script>
+  <script src="js/entities/Player.js"></script>
+  <script src="js/scenes/BootScene.js"></script>
+  <script src="js/scenes/TitleScene.js"></script>
+  <script src="js/scenes/LobbyScene.js"></script>
+  <script src="js/scenes/WorldMapScene.js"></script>
+  <script src="js/scenes/AchievementScene.js"></script>
+  <script src="js/scenes/Chapter1Scene.js"></script>
+  <script src="js/scenes/Chapter2Scene.js"></script>
+  <script src="js/scenes/Chapter3Scene.js"></script>
+  <script src="js/scenes/FinaleScene.js"></script>
+
+  <!-- Main entry -->
+  <script src="js/main.js"></script>
+</body>
+</html>
