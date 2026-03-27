@@ -14,21 +14,11 @@ class Chapter1Scene extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor('#3A2F28');
+    SceneUI.initPremiumUI(this, LEGO_COLORS.BRIGHT_PINK);
 
-    // Room header
-    this.roomLabel = this.add.text(GAME_WIDTH / 2, 20, '', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '10px',
-      color: LEGO_COLORS.YELLOW
-    }).setOrigin(0.5);
-
-    // Room progress
-    this.progressText = this.add.text(GAME_WIDTH - 20, 20, '', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '7px',
-      color: LEGO_COLORS.GREY
-    }).setOrigin(1, 0.5);
+    // Room header (will be updated by startRoom)
+    this.roomLabel = null;
+    this.progressText = null;
 
     // Start first room
     this.startRoom(0);
@@ -54,8 +44,7 @@ class Chapter1Scene extends Phaser.Scene {
     if (this.roomContainer) this.roomContainer.destroy();
     this.roomContainer = this.add.container(0, 0);
 
-    this.roomLabel.setText(this.getRoomTitle(roomIndex));
-    this.progressText.setText(`Room ${roomIndex + 1}/${this.totalRooms}`);
+    SceneUI.createRoomHeader(this, 1, 'THE FIRST BRICK', this.getRoomTitle(roomIndex), roomIndex + 1, this.totalRooms);
 
     // Different puzzle types per room
     const puzzleType = roomIndex % 5;

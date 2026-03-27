@@ -14,21 +14,12 @@ class Chapter2Scene extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor('#2A1F1A');
+    SceneUI.initPremiumUI(this, LEGO_COLORS.RED);
     this.score = 0;
     this.lives = 5;
 
-    this.roomLabel = this.add.text(GAME_WIDTH / 2, 20, '', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '10px',
-      color: LEGO_COLORS.YELLOW
-    }).setOrigin(0.5);
-
-    this.progressText = this.add.text(GAME_WIDTH - 20, 20, '', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '7px',
-      color: LEGO_COLORS.GREY
-    }).setOrigin(1, 0.5);
+    this.roomLabel = null;
+    this.progressText = null;
 
     this.startRoom(0);
 
@@ -53,8 +44,7 @@ class Chapter2Scene extends Phaser.Scene {
       'Living Room Lockdown', 'Garage Gauntlet', 'Backyard Ambush',
       'The Grand Finale'
     ];
-    this.roomLabel.setText(titles[roomIndex] || `Room ${roomIndex + 1}`);
-    this.progressText.setText(`Room ${roomIndex + 1}/${this.totalRooms}`);
+    SceneUI.createRoomHeader(this, 2, 'HOME ALONE', titles[roomIndex] || 'Room ' + (roomIndex + 1), roomIndex + 1, this.totalRooms);
 
     const puzzleType = roomIndex % 5;
     switch (puzzleType) {

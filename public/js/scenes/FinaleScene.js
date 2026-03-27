@@ -13,19 +13,10 @@ class FinaleScene extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor('#1B1B2E');
+    SceneUI.initPremiumUI(this, LEGO_COLORS.YELLOW);
 
-    this.roomLabel = this.add.text(GAME_WIDTH / 2, 20, '', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '10px',
-      color: LEGO_COLORS.YELLOW
-    }).setOrigin(0.5);
-
-    this.progressText = this.add.text(GAME_WIDTH - 20, 20, '', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '7px',
-      color: LEGO_COLORS.GREY
-    }).setOrigin(1, 0.5);
+    this.roomLabel = null;
+    this.progressText = null;
 
     this.startRoom(0);
 
@@ -52,8 +43,7 @@ class FinaleScene extends Phaser.Scene {
       'First Design', 'Friends Forever', 'Ideas Factory',
       'Icons Rising', 'Design Master', 'The Final Brick'
     ];
-    this.roomLabel.setText(titles[roomIndex] || `Room ${roomIndex + 1}`);
-    this.progressText.setText(`Brick ${30 + roomIndex + 1}/40`);
+    SceneUI.createRoomHeader(this, 4, 'ROOM 40', titles[roomIndex] || 'Room ' + (roomIndex + 1), 30 + roomIndex + 1, 40);
 
     // Mix of fast puzzles from all chapters
     const puzzleType = roomIndex % 4;

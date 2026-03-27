@@ -13,19 +13,10 @@ class Chapter3Scene extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor('#1A0A0A');
+    SceneUI.initPremiumUI(this, LEGO_COLORS.ORANGE);
 
-    this.roomLabel = this.add.text(GAME_WIDTH / 2, 20, '', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '10px',
-      color: LEGO_COLORS.ORANGE
-    }).setOrigin(0.5);
-
-    this.progressText = this.add.text(GAME_WIDTH - 20, 20, '', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '7px',
-      color: LEGO_COLORS.GREY
-    }).setOrigin(1, 0.5);
+    this.roomLabel = null;
+    this.progressText = null;
 
     this.startRoom(0);
 
@@ -50,8 +41,7 @@ class Chapter3Scene extends Phaser.Scene {
       'The Armory', 'The Throne', 'The Eye Chamber',
       'The Summit'
     ];
-    this.roomLabel.setText(titles[roomIndex] || `Room ${roomIndex + 1}`);
-    this.progressText.setText(`Room ${roomIndex + 1}/${this.totalRooms}`);
+    SceneUI.createRoomHeader(this, 3, 'THE DARK TOWER', titles[roomIndex] || 'Room ' + (roomIndex + 1), roomIndex + 1, this.totalRooms);
 
     // Dark tower atmosphere
     this.drawTowerBg();
