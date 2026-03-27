@@ -4,7 +4,7 @@ const config = {
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
   parent: 'game-container',
-  backgroundColor: '#1B2A34',
+  backgroundColor: '#0A0E17',
   dom: {
     createContainer: true
   },

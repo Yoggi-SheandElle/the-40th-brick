@@ -42,17 +42,20 @@ class PlayerEntity {
     const g = this.bodyGfx;
     g.clear();
 
+    const isAnte = this.name && this.name.toLowerCase().includes('ante');
     const c = Phaser.Display.Color.HexStringToColor(this.color).color;
     const skinColor = 0xF2CD37; // LEGO yellow skin
     const darkColor = Phaser.Display.Color.HexStringToColor(this.color).darken(30).color;
+    const hairColor = isAnte ? 0x352100 : darkColor; // Dark brown for Ante
+    const pantsColor = isAnte ? 0x1B2A34 : 0x0055BF; // Dark pants for Ante
 
-    // Legs (two rectangles)
-    g.fillStyle(0x0055BF, 1); // Blue pants
-    g.fillRect(-7, 8, 6, 12);  // Left leg
-    g.fillRect(1, 8, 6, 12);   // Right leg
+    // Legs
+    g.fillStyle(pantsColor, 1);
+    g.fillRect(-7, 8, 6, 12);
+    g.fillRect(1, 8, 6, 12);
 
     // Feet
-    g.fillStyle(0x1B2A34, 1);
+    g.fillStyle(isAnte ? 0x352100 : 0x1B2A34, 1);
     g.fillRect(-8, 18, 7, 3);
     g.fillRect(1, 18, 7, 3);
 
@@ -60,12 +63,20 @@ class PlayerEntity {
     g.fillStyle(c, 1);
     g.fillRect(-9, -6, 18, 15);
 
+    // Torso detail - LEGO designer badge for Ante
+    if (isAnte) {
+      g.fillStyle(0xF2CD37, 0.8);
+      g.fillRect(-3, -2, 6, 5); // Small LEGO logo area
+      g.fillStyle(0xB40000, 1);
+      g.fillRect(-1, -1, 2, 3); // Tiny red brick on chest
+    }
+
     // Arms
     g.fillStyle(c, 1);
-    g.fillRect(-13, -5, 5, 11); // Left arm
-    g.fillRect(8, -5, 5, 11);   // Right arm
+    g.fillRect(-13, -5, 5, 11);
+    g.fillRect(8, -5, 5, 11);
 
-    // Hands (LEGO yellow)
+    // Hands
     g.fillStyle(skinColor, 1);
     g.fillRect(-13, 5, 5, 4);
     g.fillRect(8, 5, 5, 4);
@@ -79,19 +90,41 @@ class PlayerEntity {
     g.fillRect(-4, -14, 2, 2);
     g.fillRect(2, -14, 2, 2);
 
-    // Smile
-    g.fillRect(-3, -10, 6, 1);
-    g.fillRect(-4, -11, 1, 1);
-    g.fillRect(3, -11, 1, 1);
+    if (isAnte) {
+      // Eyelashes for Ante
+      g.fillRect(-4, -15, 1, 1);
+      g.fillRect(3, -15, 1, 1);
+      // Friendly smile
+      g.fillRect(-2, -10, 4, 1);
+      g.fillRect(-3, -11, 1, 1);
+      g.fillRect(2, -11, 1, 1);
 
-    // Hair/hat - simple brick-like hat
-    g.fillStyle(darkColor, 1);
-    g.fillRect(-7, -24, 14, 7);
-    g.fillRect(-5, -26, 10, 3);
+      // Long dark brown hair (flowing, LEGO style)
+      g.fillStyle(hairColor, 1);
+      // Top of hair
+      g.fillRect(-7, -23, 14, 6);
+      g.fillRect(-8, -21, 16, 4);
+      // Side hair flowing down (long hair)
+      g.fillRect(-9, -17, 3, 18); // Left side hair
+      g.fillRect(6, -17, 3, 18);  // Right side hair
+      // Hair tips (slight taper)
+      g.fillRect(-8, 0, 2, 4);
+      g.fillRect(6, 0, 2, 4);
+      // Bangs
+      g.fillRect(-5, -18, 10, 2);
+    } else {
+      // Default smile
+      g.fillRect(-3, -10, 6, 1);
+      g.fillRect(-4, -11, 1, 1);
+      g.fillRect(3, -11, 1, 1);
 
-    // Stud on head (classic LEGO)
-    g.fillStyle(darkColor, 1);
-    g.fillRect(-2, -27, 4, 2);
+      // Hair/hat - simple brick-like hat
+      g.fillStyle(hairColor, 1);
+      g.fillRect(-7, -24, 14, 7);
+      g.fillRect(-5, -26, 10, 3);
+      // Stud on head
+      g.fillRect(-2, -27, 4, 2);
+    }
   }
 
   update(cursors, wasd) {
