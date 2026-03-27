@@ -7,6 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>The 40th Brick</title>
+  <link rel="manifest" href="/manifest.json">
   <link rel="stylesheet" href="css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
@@ -17,6 +18,10 @@
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
   <!-- Socket.io client -->
   <script src="/socket.io/socket.io.js"></script>
+
+  <!-- Input + Save systems -->
+  <script src="js/gamepad.js"></script>
+  <script src="js/save.js"></script>
 
   <!-- Game data -->
   <script src="js/constants.js"></script>
@@ -40,5 +45,14 @@
 
   <!-- Main entry -->
   <script src="js/main.js"></script>
+
+  <!-- Register Service Worker for offline play -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('[PWA] Service Worker registered'))
+        .catch(err => console.warn('[PWA] SW registration failed:', err));
+    }
+  </script>
 </body>
 </html>

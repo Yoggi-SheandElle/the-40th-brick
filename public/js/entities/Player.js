@@ -109,20 +109,23 @@ class PlayerEntity {
 
     let moving = false;
 
-    if (cursors.left.isDown || wasd.left.isDown) {
+    // Gamepad input (left stick + D-pad)
+    const gp = GamepadManager.getMovement();
+
+    if (cursors.left.isDown || wasd.left.isDown || gp.x < -0.3) {
       body.setVelocityX(-PLAYER_SPEED);
       this.facing = 'left';
       moving = true;
-    } else if (cursors.right.isDown || wasd.right.isDown) {
+    } else if (cursors.right.isDown || wasd.right.isDown || gp.x > 0.3) {
       body.setVelocityX(PLAYER_SPEED);
       this.facing = 'right';
       moving = true;
     }
 
-    if (cursors.up.isDown || wasd.up.isDown) {
+    if (cursors.up.isDown || wasd.up.isDown || gp.y < -0.3) {
       body.setVelocityY(-PLAYER_SPEED);
       moving = true;
-    } else if (cursors.down.isDown || wasd.down.isDown) {
+    } else if (cursors.down.isDown || wasd.down.isDown || gp.y > 0.3) {
       body.setVelocityY(PLAYER_SPEED);
       moving = true;
     }

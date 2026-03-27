@@ -60,13 +60,30 @@ class TitleScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Buttons
-    this.createButton(cx, cy + 100, 'PLAY TOGETHER', () => {
+    const btnTogether = this.createButton(cx, cy + 100, 'PLAY TOGETHER', () => {
       this.scene.start('LobbyScene', { mode: 'multi' });
     }, LEGO_COLORS.RED, 260);
 
-    this.createButton(cx, cy + 150, 'PLAY SOLO', () => {
+    const btnSolo = this.createButton(cx, cy + 150, 'PLAY SOLO', () => {
       this.scene.start('LobbyScene', { mode: 'solo' });
     }, LEGO_COLORS.BLUE, 260);
+
+    // Gamepad focus navigation
+    GamepadManager.setFocusables([
+      { element: btnTogether, callback: () => this.scene.start('LobbyScene', { mode: 'multi' }) },
+      { element: btnSolo, callback: () => this.scene.start('LobbyScene', { mode: 'solo' }) }
+    ]);
+
+    // Controller hint
+    if (GamepadManager.isConnected()) {
+      this.add.text(cx, GAME_HEIGHT - 8, '\u24B6 Select   \u24B7 Back   \u24CD Hint', {
+        fontFamily: '"Press Start 2P"',
+        fontSize: '6px',
+        color: LEGO_COLORS.DARK_GREY,
+        stroke: '#000000',
+        strokeThickness: 1
+      }).setOrigin(0.5);
+    }
 
     // Title float animation
     this.tweens.add({

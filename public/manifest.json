@@ -1,0 +1,23 @@
+{
+  "name": "The 40th Brick",
+  "short_name": "40th Brick",
+  "description": "A co-op puzzle adventure built for someone who builds worlds. 40 rooms. 4 chapters. 1 amazing designer.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#1B2A34",
+  "theme_color": "#B40000",
+  "categories": ["games", "puzzle"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
