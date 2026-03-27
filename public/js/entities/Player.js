@@ -99,17 +99,17 @@ class PlayerEntity {
       g.fillRect(-3, -11, 1, 1);
       g.fillRect(2, -11, 1, 1);
 
-      // Long dark brown hair (flowing, LEGO style)
+      // Shoulder-length dark brown hair (LEGO style)
       g.fillStyle(hairColor, 1);
       // Top of hair
       g.fillRect(-7, -23, 14, 6);
       g.fillRect(-8, -21, 16, 4);
-      // Side hair flowing down (long hair)
-      g.fillRect(-9, -17, 3, 18); // Left side hair
-      g.fillRect(6, -17, 3, 18);  // Right side hair
-      // Hair tips (slight taper)
-      g.fillRect(-8, 0, 2, 4);
-      g.fillRect(6, 0, 2, 4);
+      // Side hair to shoulders
+      g.fillRect(-9, -17, 3, 12); // Left side hair
+      g.fillRect(6, -17, 3, 12);  // Right side hair
+      // Rounded tips
+      g.fillRect(-8, -6, 2, 2);
+      g.fillRect(6, -6, 2, 2);
       // Bangs
       g.fillRect(-5, -18, 10, 2);
     } else {

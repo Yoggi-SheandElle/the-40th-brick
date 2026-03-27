@@ -14,7 +14,7 @@ class AchievementScene extends Phaser.Scene {
     const cy = GAME_HEIGHT / 2;
 
     // Dark overlay
-    this.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.85);
+    this.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x0A0E17, 0.92);
 
     const achievement = ACHIEVEMENTS.find(a => a.id === this.achievementId);
     if (!achievement) {
@@ -22,8 +22,10 @@ class AchievementScene extends Phaser.Scene {
       return;
     }
 
+    // Save achievement
+    SaveManager.unlockAchievement(this.achievementId);
+
     // Brick building animation
-    const bricks = [];
     const brickCount = 8;
     for (let i = 0; i < brickCount; i++) {
       const brick = this.add.graphics();
@@ -33,14 +35,19 @@ class AchievementScene extends Phaser.Scene {
       const by = cy + 80 - i * bh;
 
       const colors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.YELLOW, LEGO_COLORS.GREEN, LEGO_COLORS.ORANGE];
-      const color = Phaser.Display.Color.HexStringToColor(colors[i % colors.length]).color;
+      const color = Phaser.Display.Color.HexStringToColor(colors[i % colors.length]);
 
-      brick.fillStyle(color, 1);
-      brick.fillRect(-bw / 2, -bh / 2, bw, bh);
+      brick.fillStyle(color.color, 0.9);
+      brick.fillRoundedRect(-bw / 2, -bh / 2, bw, bh, 2);
+      // 3D bottom
+      brick.fillStyle(color.darken(25).color, 0.9);
+      brick.fillRect(-bw / 2, bh / 2 - 3, bw, 3);
+      // Glow edge
+      brick.lineStyle(1, color.lighten(20).color, 0.2);
+      brick.strokeRoundedRect(-bw / 2, -bh / 2, bw, bh, 2);
+
       brick.setPosition(bx, -50);
-      bricks.push(brick);
 
-      // Animate brick falling into place
       this.tweens.add({
         targets: brick,
         y: by,
@@ -48,110 +55,115 @@ class AchievementScene extends Phaser.Scene {
         duration: 300,
         ease: 'Bounce.easeOut',
         onComplete: () => {
-          // Add stud circles on top
+          // Studs on top
           const studGfx = this.add.graphics();
           studGfx.setPosition(bx, by);
           const studs = Math.floor(bw / 16);
           for (let s = 0; s < studs; s++) {
-            studGfx.fillStyle(Phaser.Display.Color.IntegerToColor(color).lighten(15).color, 1);
+            studGfx.fillStyle(color.lighten(15).color, 1);
             studGfx.fillCircle(-bw / 2 + 10 + s * 16, -bh / 2 - 2, 4);
+            studGfx.fillStyle(0xFFFFFF, 0.12);
+            studGfx.fillCircle(-bw / 2 + 9 + s * 16, -bh / 2 - 3, 1.5);
           }
+          // Vibrate on landing
+          GamepadManager.vibrate(50, 0.1, 0.2);
         }
       });
     }
 
-    // Achievement content (appears after bricks)
+    // Achievement content
     this.time.delayedCall(brickCount * 150 + 500, () => {
-      // ACHIEVEMENT UNLOCKED header
-      const header = this.add.text(cx, cy - 120, 'BRICK UNLOCKED!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '14px',
-        color: LEGO_COLORS.YELLOW,
-        stroke: '#000000',
-        strokeThickness: 3
+      const header = this.add.text(cx, cy - 130, 'BRICK UNLOCKED', {
+        fontFamily: FONT_TITLE,
+        fontSize: '18px',
+        fontStyle: 'bold',
+        color: LEGO_COLORS.YELLOW
       }).setOrigin(0.5).setAlpha(0);
-
       this.tweens.add({ targets: header, alpha: 1, duration: 500 });
 
-      // Achievement title
-      const title = this.add.text(cx, cy - 85, achievement.title, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '12px',
+      // Glow line
+      const line = this.add.graphics();
+      line.lineStyle(1, hexToInt(LEGO_COLORS.YELLOW), 0.3);
+      line.lineBetween(cx - 100, cy - 112, cx + 100, cy - 112);
+
+      const title = this.add.text(cx, cy - 95, achievement.title, {
+        fontFamily: FONT_TITLE,
+        fontSize: '14px',
+        fontStyle: 'bold',
         color: achievement.color || LEGO_COLORS.WHITE
       }).setOrigin(0.5).setAlpha(0);
-
       this.tweens.add({ targets: title, alpha: 1, duration: 500, delay: 200 });
 
-      // Year
-      const year = this.add.text(cx, cy - 68, `${achievement.year}`, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '8px',
-        color: LEGO_COLORS.GREY
+      const year = this.add.text(cx, cy - 75, achievement.year + '', {
+        fontFamily: FONT_MONO,
+        fontSize: '10px',
+        color: LEGO_COLORS.CYAN
       }).setOrigin(0.5).setAlpha(0);
-
       this.tweens.add({ targets: year, alpha: 1, duration: 500, delay: 300 });
 
-      // Description
-      const desc = this.add.text(cx, cy - 40, achievement.description, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '7px',
-        color: LEGO_COLORS.WHITE,
+      const desc = this.add.text(cx, cy - 45, achievement.description, {
+        fontFamily: FONT_BODY,
+        fontSize: '13px',
+        color: '#D0D8E8',
         wordWrap: { width: 500 },
         align: 'center',
         lineSpacing: 6
       }).setOrigin(0.5).setAlpha(0);
-
       this.tweens.add({ targets: desc, alpha: 1, duration: 500, delay: 400 });
 
-      // Quote (if exists)
       if (achievement.quote) {
-        const quote = this.add.text(cx, cy + 20, `"${achievement.quote}"`, {
-          fontFamily: '"Press Start 2P"',
-          fontSize: '7px',
-          color: LEGO_COLORS.YELLOW,
+        const quote = this.add.text(cx, cy + 15, '"' + achievement.quote + '"', {
+          fontFamily: FONT_BODY,
+          fontSize: '12px',
           fontStyle: 'italic',
+          color: LEGO_COLORS.YELLOW,
           wordWrap: { width: 500 },
           align: 'center',
           lineSpacing: 6
         }).setOrigin(0.5).setAlpha(0);
-
         this.tweens.add({ targets: quote, alpha: 1, duration: 500, delay: 600 });
 
         if (achievement.quoteSource) {
-          const src = this.add.text(cx, cy + 55, `- ${achievement.quoteSource}`, {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '6px',
-            color: LEGO_COLORS.GREY
+          const src = this.add.text(cx, cy + 50, '- ' + achievement.quoteSource, {
+            fontFamily: FONT_MONO,
+            fontSize: '8px',
+            color: '#6A7A8A'
           }).setOrigin(0.5).setAlpha(0);
-
           this.tweens.add({ targets: src, alpha: 1, duration: 500, delay: 700 });
         }
       }
 
-      // Continue button
+      // Continue prompt
       this.time.delayedCall(1500, () => {
-        const continueText = this.add.text(cx, GAME_HEIGHT - 60, 'CLICK TO CONTINUE', {
-          fontFamily: '"Press Start 2P"',
+        const continueText = this.add.text(cx, GAME_HEIGHT - 50, 'PRESS A OR CLICK TO CONTINUE', {
+          fontFamily: FONT_MONO,
           fontSize: '9px',
-          color: LEGO_COLORS.GREEN
+          color: LEGO_COLORS.GREEN,
+          letterSpacing: 1
         }).setOrigin(0.5);
 
         this.tweens.add({
           targets: continueText,
-          alpha: 0.4,
+          alpha: 0.3,
           duration: 600,
           yoyo: true,
           repeat: -1
         });
 
-        this.input.once('pointerdown', () => {
-          this.scene.stop('AchievementScene');
-          // If there's a callback scene, go there
-          if (this.nextScene) {
-            this.scene.start(this.nextScene, this.nextData);
-          }
-        });
+        // Click or gamepad A
+        this.input.once('pointerdown', () => this.proceed());
+        GamepadManager.on('button_0', () => this.proceed());
       });
+    });
+  }
+
+  proceed() {
+    this.cameras.main.fadeOut(400, 10, 14, 23);
+    this.time.delayedCall(400, () => {
+      this.scene.stop('AchievementScene');
+      if (this.nextScene) {
+        this.scene.start(this.nextScene, this.nextData);
+      }
     });
   }
 }

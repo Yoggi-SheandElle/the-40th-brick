@@ -4,13 +4,14 @@ class LobbyScene extends Phaser.Scene {
   }
 
   init(data) {
-    this.gameMode = data?.mode || 'multi'; // 'solo' or 'multi'
+    this.gameMode = data?.mode || 'multi';
   }
 
   create() {
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
-    this.cameras.main.setBackgroundColor('#1B2A34');
+    this.cameras.main.setBackgroundColor('#0A0E17');
+    drawGridBg(this);
 
     this.myReady = false;
     this.otherReady = false;
@@ -35,103 +36,102 @@ class LobbyScene extends Phaser.Scene {
     this.events.on('shutdown', () => {
       Object.entries(this._listeners).forEach(([e, fn]) => network.off(e, fn));
     });
+
+    this.cameras.main.fadeIn(400, 10, 14, 23);
   }
 
-  // SOLO MODE
   showSoloSetup() {
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
 
-    this.add.text(cx, 60, 'SOLO ADVENTURE', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '20px',
-      color: LEGO_COLORS.YELLOW,
-      stroke: '#000000',
-      strokeThickness: 4
+    this.add.text(cx, 55, 'SOLO ADVENTURE', {
+      fontFamily: FONT_TITLE,
+      fontSize: '24px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5);
 
-    this.add.text(cx, 100, "Ante's journey through 40 rooms of puzzles", {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '8px',
-      color: LEGO_COLORS.WHITE,
-      stroke: '#000000',
-      strokeThickness: 2
+    this.add.text(cx, 85, "Antica's journey through 40 rooms of puzzles", {
+      fontFamily: FONT_BODY,
+      fontSize: '14px',
+      color: '#8896AA'
     }).setOrigin(0.5);
 
-    // Name input
-    this.add.text(cx, cy - 40, 'Your name:', {
-      fontFamily: '"Press Start 2P"',
+    // Decorative line
+    const line = this.add.graphics();
+    line.lineStyle(1, 0x00D4FF, 0.2);
+    line.lineBetween(cx - 120, 105, cx + 120, 105);
+
+    // Left side: Ante's minifig (large)
+    this.drawLobbyPlayer(cx - 180, cy + 30, 'Ante', LEGO_COLORS.BRIGHT_PINK);
+
+    // Right side: Name input + buttons
+    this.add.text(cx + 80, cy - 60, 'YOUR NAME', {
+      fontFamily: FONT_MONO,
       fontSize: '10px',
-      color: LEGO_COLORS.WHITE,
-      stroke: '#000000',
-      strokeThickness: 2
+      color: LEGO_COLORS.CYAN,
+      letterSpacing: 3
     }).setOrigin(0.5);
 
-    this.nameInput = this.add.dom(cx, cy).createFromHTML(
-      `<input type="text" id="nameInput" value="Ante" maxlength="12"
-       style="font-family: 'Press Start 2P'; font-size: 16px; padding: 10px 20px;
-       background: #2C2C2C; color: #F2CD37; border: 3px solid #F2CD37;
-       text-align: center; outline: none; width: 220px; border-radius: 6px;" />`
+    this.nameInput = this.add.dom(cx + 80, cy - 25).createFromHTML(
+      '<input type="text" id="nameInput" value="Ante" maxlength="12" ' +
+      'style="font-family: Orbitron, monospace; font-size: 18px; padding: 10px 24px; ' +
+      'background: rgba(0,212,255,0.06); color: #F2CD37; border: 2px solid rgba(0,212,255,0.3); ' +
+      'text-align: center; outline: none; width: 240px; border-radius: 8px; letter-spacing: 2px;" />'
     );
 
-    // Draw Ante's minifig
-    this.drawLobbyPlayer(cx, cy + 100, 'Ante', LEGO_COLORS.BRIGHT_PINK);
-
-    // Start button
-    this.createButton(cx, cy + 180, 'START ADVENTURE', () => {
+    // Brick button - START (right side, below input)
+    this.createBrickButton(cx + 80, cy + 40, 'START ADVENTURE', () => {
       const name = document.getElementById('nameInput')?.value || 'Ante';
-      network.startSolo(name);
-    }, LEGO_COLORS.GREEN, 280);
+      this.cameras.main.fadeOut(400, 10, 14, 23);
+      this.time.delayedCall(400, () => network.startSolo(name));
+    }, LEGO_COLORS.GREEN, 260);
 
-    // Back
-    this.createButton(cx, GAME_HEIGHT - 40, 'BACK', () => {
-      this.scene.start('TitleScene');
-    }, LEGO_COLORS.GREY, 140);
+    // Back button (centered at bottom)
+    this.createBrickButton(cx, GAME_HEIGHT - 30, 'BACK', () => {
+      this.cameras.main.fadeOut(300, 10, 14, 23);
+      this.time.delayedCall(300, () => this.scene.start('TitleScene'));
+    }, LEGO_COLORS.DARK_GREY, 140);
   }
 
-  // MULTIPLAYER MODE
   showMultiSetup() {
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
 
     this.add.text(cx, 50, 'CO-OP LOBBY', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '20px',
-      color: LEGO_COLORS.YELLOW,
-      stroke: '#000000',
-      strokeThickness: 4
+      fontFamily: FONT_TITLE,
+      fontSize: '24px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5);
 
-    // Name input
-    this.add.text(cx, cy - 70, 'Enter your name:', {
-      fontFamily: '"Press Start 2P"',
+    this.add.text(cx, cy - 80, 'ENTER YOUR NAME', {
+      fontFamily: FONT_MONO,
       fontSize: '10px',
-      color: LEGO_COLORS.WHITE,
-      stroke: '#000000',
-      strokeThickness: 2
+      color: LEGO_COLORS.CYAN,
+      letterSpacing: 3
     }).setOrigin(0.5);
 
-    this.nameInput = this.add.dom(cx, cy - 35).createFromHTML(
-      `<input type="text" id="nameInput" value="Yossi" maxlength="12"
-       style="font-family: 'Press Start 2P'; font-size: 16px; padding: 10px 20px;
-       background: #2C2C2C; color: #F2CD37; border: 3px solid #F2CD37;
-       text-align: center; outline: none; width: 220px; border-radius: 6px;" />`
+    this.nameInput = this.add.dom(cx, cy - 45).createFromHTML(
+      '<input type="text" id="nameInput" value="Yossi" maxlength="12" ' +
+      'style="font-family: Orbitron, monospace; font-size: 18px; padding: 10px 24px; ' +
+      'background: rgba(0,212,255,0.06); color: #F2CD37; border: 2px solid rgba(0,212,255,0.3); ' +
+      'text-align: center; outline: none; width: 240px; border-radius: 8px; letter-spacing: 2px;" />'
     );
 
-    // Buttons
-    this.createBtn = this.createButton(cx - 130, cy + 30, 'CREATE ROOM', () => {
+    this.createBtn = this.createBrickButton(cx - 130, cy + 30, 'CREATE ROOM', () => {
       const name = document.getElementById('nameInput')?.value || 'Player';
       network.createRoom(name);
     }, LEGO_COLORS.RED, 220);
 
-    this.joinBtn = this.createButton(cx + 130, cy + 30, 'JOIN ROOM', () => {
+    this.joinBtn = this.createBrickButton(cx + 130, cy + 30, 'JOIN ROOM', () => {
       this.showJoinInput();
     }, LEGO_COLORS.BLUE, 220);
 
-    // Back
-    this.createButton(cx, GAME_HEIGHT - 40, 'BACK', () => {
-      this.scene.start('TitleScene');
-    }, LEGO_COLORS.GREY, 140);
+    this.createBrickButton(cx, GAME_HEIGHT - 35, 'BACK', () => {
+      this.cameras.main.fadeOut(300, 10, 14, 23);
+      this.time.delayedCall(300, () => this.scene.start('TitleScene'));
+    }, LEGO_COLORS.DARK_GREY, 140);
   }
 
   showJoinInput() {
@@ -141,23 +141,21 @@ class LobbyScene extends Phaser.Scene {
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
 
-    this.add.text(cx, cy + 10, 'Enter room code:', {
-      fontFamily: '"Press Start 2P"',
+    this.add.text(cx, cy + 5, 'ROOM CODE', {
+      fontFamily: FONT_MONO,
       fontSize: '10px',
-      color: LEGO_COLORS.WHITE,
-      stroke: '#000000',
-      strokeThickness: 2
+      color: LEGO_COLORS.CYAN,
+      letterSpacing: 3
     }).setOrigin(0.5);
 
-    this.codeInput = this.add.dom(cx, cy + 50).createFromHTML(
-      `<input type="text" id="codeInput" maxlength="4" placeholder="0000"
-       style="font-family: 'Press Start 2P'; font-size: 28px; padding: 10px 20px;
-       background: #2C2C2C; color: #F2CD37; border: 3px solid #F2CD37;
-       text-align: center; outline: none; width: 180px; letter-spacing: 10px;
-       border-radius: 6px;" />`
+    this.codeInput = this.add.dom(cx, cy + 45).createFromHTML(
+      '<input type="text" id="codeInput" maxlength="4" placeholder="0000" ' +
+      'style="font-family: Orbitron, monospace; font-size: 32px; padding: 10px 24px; ' +
+      'background: rgba(0,212,255,0.06); color: #F2CD37; border: 2px solid rgba(0,212,255,0.3); ' +
+      'text-align: center; outline: none; width: 200px; letter-spacing: 12px; border-radius: 8px;" />'
     );
 
-    this.createButton(cx, cy + 110, 'JOIN', () => {
+    this.createBrickButton(cx, cy + 110, 'JOIN', () => {
       const code = document.getElementById('codeInput')?.value;
       const name = document.getElementById('nameInput')?.value || 'Player';
       if (code && code.length === 4) {
@@ -169,50 +167,48 @@ class LobbyScene extends Phaser.Scene {
   onRoomCreated(data) {
     this.clearScene();
     const cx = GAME_WIDTH / 2;
+    drawGridBg(this);
 
     this.add.text(cx, 50, 'WAITING FOR PLAYER 2', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '16px',
-      color: LEGO_COLORS.YELLOW,
-      stroke: '#000000',
-      strokeThickness: 4
+      fontFamily: FONT_TITLE,
+      fontSize: '18px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5);
 
-    // Code display with background
+    // Code display panel
     const codeBg = this.add.graphics();
-    codeBg.fillStyle(0x000000, 0.5);
-    codeBg.fillRoundedRect(cx - 140, 100, 280, 90, 12);
+    codeBg.fillStyle(0x131824, 0.8);
+    codeBg.fillRoundedRect(cx - 150, 90, 300, 100, 12);
+    codeBg.lineStyle(1, 0x00D4FF, 0.15);
+    codeBg.strokeRoundedRect(cx - 150, 90, 300, 100, 12);
 
-    this.add.text(cx, 120, 'Room Code', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '10px',
-      color: LEGO_COLORS.WHITE,
-      stroke: '#000000',
-      strokeThickness: 2
+    this.add.text(cx, 115, 'ROOM CODE', {
+      fontFamily: FONT_MONO,
+      fontSize: '9px',
+      color: LEGO_COLORS.CYAN,
+      letterSpacing: 3
     }).setOrigin(0.5);
 
     this.add.text(cx, 155, data.code, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '40px',
+      fontFamily: FONT_TITLE,
+      fontSize: '42px',
+      fontStyle: 'bold',
       color: LEGO_COLORS.YELLOW,
-      stroke: '#000000',
-      strokeThickness: 5
+      letterSpacing: 8
     }).setOrigin(0.5);
 
     this.add.text(cx, 210, 'Share this code with your partner', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '8px',
-      color: LEGO_COLORS.GREY,
-      stroke: '#000000',
-      strokeThickness: 2
+      fontFamily: FONT_BODY,
+      fontSize: '13px',
+      color: '#6A7A8A'
     }).setOrigin(0.5);
 
-    // Player minifig
     this.drawLobbyPlayer(cx, 310, data.player.name, LEGO_COLORS.RED);
 
-    // Waiting animation
+    // Waiting dots
     const dots = this.add.text(cx, 400, '. . .', {
-      fontFamily: '"Press Start 2P"',
+      fontFamily: FONT_TITLE,
       fontSize: '16px',
       color: LEGO_COLORS.ORANGE
     }).setOrigin(0.5);
@@ -232,61 +228,51 @@ class LobbyScene extends Phaser.Scene {
   showReadyScreen(myPlayer, otherPlayer) {
     this.clearScene();
     const cx = GAME_WIDTH / 2;
+    drawGridBg(this);
 
-    this.add.text(cx, 40, 'BOTH PLAYERS CONNECTED!', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '14px',
-      color: LEGO_COLORS.GREEN,
-      stroke: '#000000',
-      strokeThickness: 3
+    this.add.text(cx, 40, 'BOTH PLAYERS CONNECTED', {
+      fontFamily: FONT_TITLE,
+      fontSize: '16px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.GREEN
     }).setOrigin(0.5);
 
-    // Players
     this.drawLobbyPlayer(cx - 120, 180, myPlayer.name, LEGO_COLORS.RED);
     this.drawLobbyPlayer(cx + 120, 180, otherPlayer.name, LEGO_COLORS.BLUE);
 
     this.add.text(cx, 160, '+', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '28px',
-      color: LEGO_COLORS.YELLOW,
-      stroke: '#000000',
-      strokeThickness: 3
+      fontFamily: FONT_TITLE,
+      fontSize: '32px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5);
 
-    // Ready labels
     this.myReadyText = this.add.text(cx - 120, 280, 'NOT READY', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '9px',
-      color: LEGO_COLORS.RED,
-      stroke: '#000000',
-      strokeThickness: 2
+      fontFamily: FONT_MONO,
+      fontSize: '10px',
+      color: LEGO_COLORS.RED
     }).setOrigin(0.5);
 
     this.otherReadyText = this.add.text(cx + 120, 280, 'NOT READY', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '9px',
-      color: LEGO_COLORS.RED,
-      stroke: '#000000',
-      strokeThickness: 2
+      fontFamily: FONT_MONO,
+      fontSize: '10px',
+      color: LEGO_COLORS.RED
     }).setOrigin(0.5);
 
-    this.createButton(cx, 340, 'READY!', () => {
+    this.createBrickButton(cx, 340, 'READY!', () => {
       network.setReady();
       this.myReady = !this.myReady;
       this.myReadyText.setText(this.myReady ? 'READY!' : 'NOT READY');
       this.myReadyText.setColor(this.myReady ? LEGO_COLORS.GREEN : LEGO_COLORS.RED);
     }, LEGO_COLORS.GREEN, 200);
 
-    // Flavor text
     const bg = this.add.graphics();
-    bg.fillStyle(0x000000, 0.3);
+    bg.fillStyle(0x131824, 0.5);
     bg.fillRoundedRect(cx - 250, 390, 500, 40, 6);
-    this.add.text(cx, 410, '40 rooms. 40 bricks. 40 years of awesome.', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '8px',
-      color: LEGO_COLORS.YELLOW,
-      stroke: '#000000',
-      strokeThickness: 2
+    this.add.text(cx, 410, '40 rooms. 40 bricks. 40 years of amazing.', {
+      fontFamily: FONT_BODY,
+      fontSize: '13px',
+      color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5);
   }
 
@@ -299,20 +285,21 @@ class LobbyScene extends Phaser.Scene {
   }
 
   onGameStart(data) {
-    this.scene.start('WorldMapScene', {
-      players: data.players,
-      solo: data.solo || false
+    this.cameras.main.fadeOut(400, 10, 14, 23);
+    this.time.delayedCall(400, () => {
+      this.scene.start('WorldMapScene', {
+        players: data.players,
+        solo: data.solo || false
+      });
     });
   }
 
   onJoinError(msg) {
     const cx = GAME_WIDTH / 2;
     const errorText = this.add.text(cx, GAME_HEIGHT - 80, msg, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '9px',
-      color: LEGO_COLORS.RED,
-      stroke: '#000000',
-      strokeThickness: 2
+      fontFamily: FONT_BODY,
+      fontSize: '14px',
+      color: LEGO_COLORS.RED
     }).setOrigin(0.5);
     this.time.delayedCall(3000, () => errorText.destroy());
   }
@@ -321,11 +308,10 @@ class LobbyScene extends Phaser.Scene {
     this.clearScene();
     const cx = GAME_WIDTH / 2;
     this.add.text(cx, GAME_HEIGHT / 2, 'Partner disconnected!', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '14px',
-      color: LEGO_COLORS.RED,
-      stroke: '#000000',
-      strokeThickness: 3
+      fontFamily: FONT_TITLE,
+      fontSize: '18px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.RED
     }).setOrigin(0.5);
     this.time.delayedCall(2000, () => this.scene.start('TitleScene'));
   }
@@ -333,45 +319,87 @@ class LobbyScene extends Phaser.Scene {
   drawLobbyPlayer(x, y, name, color) {
     const gfx = this.add.graphics();
     const c = Phaser.Display.Color.HexStringToColor(color).color;
-    const darkC = Phaser.Display.Color.HexStringToColor(color).darken(30).color;
     const skinColor = 0xF2CD37;
+    const isAnte = name && name.toLowerCase().includes('ante');
+    const hairColor = isAnte ? 0x352100 : Phaser.Display.Color.HexStringToColor(color).darken(30).color;
+    const pantsColor = isAnte ? 0x1B2A34 : 0x0055BF;
     const s = 3;
 
     gfx.setPosition(x, y);
+
     // Legs
-    gfx.fillStyle(0x0055BF, 1);
+    gfx.fillStyle(pantsColor, 1);
     gfx.fillRect(-7 * s, 8 * s, 6 * s, 12 * s);
     gfx.fillRect(1 * s, 8 * s, 6 * s, 12 * s);
+
+    // Feet
+    gfx.fillStyle(isAnte ? 0x352100 : 0x1B2A34, 1);
+    gfx.fillRect(-8 * s, 18 * s, 7 * s, 3 * s);
+    gfx.fillRect(1 * s, 18 * s, 7 * s, 3 * s);
+
     // Body
     gfx.fillStyle(c, 1);
     gfx.fillRect(-9 * s, -6 * s, 18 * s, 15 * s);
+
+    // Designer badge for Ante
+    if (isAnte) {
+      gfx.fillStyle(0xF2CD37, 0.8);
+      gfx.fillRect(-3 * s, -2 * s, 6 * s, 5 * s);
+      gfx.fillStyle(0xB40000, 1);
+      gfx.fillRect(-1 * s, -1 * s, 2 * s, 3 * s);
+    }
+
     // Arms
+    gfx.fillStyle(c, 1);
     gfx.fillRect(-13 * s, -5 * s, 5 * s, 11 * s);
     gfx.fillRect(8 * s, -5 * s, 5 * s, 11 * s);
+
     // Hands
     gfx.fillStyle(skinColor, 1);
     gfx.fillRect(-13 * s, 5 * s, 5 * s, 4 * s);
     gfx.fillRect(8 * s, 5 * s, 5 * s, 4 * s);
+
     // Head
     gfx.fillStyle(skinColor, 1);
     gfx.fillRect(-6 * s, -18 * s, 12 * s, 12 * s);
+
     // Eyes
-    gfx.fillStyle(0x1B2A34, 1);
+    gfx.fillStyle(0x0A0E17, 1);
     gfx.fillRect(-4 * s, -14 * s, 2 * s, 2 * s);
     gfx.fillRect(2 * s, -14 * s, 2 * s, 2 * s);
-    // Smile
-    gfx.fillRect(-3 * s, -10 * s, 6 * s, 1 * s);
-    // Hair
-    gfx.fillStyle(darkC, 1);
-    gfx.fillRect(-7 * s, -24 * s, 14 * s, 7 * s);
-    gfx.fillRect(-5 * s, -26 * s, 10 * s, 3 * s);
 
+    if (isAnte) {
+      // Eyelashes
+      gfx.fillRect(-4 * s, -15 * s, 1 * s, 1 * s);
+      gfx.fillRect(3 * s, -15 * s, 1 * s, 1 * s);
+      // Smile
+      gfx.fillRect(-2 * s, -10 * s, 4 * s, 1 * s);
+      gfx.fillRect(-3 * s, -11 * s, 1 * s, 1 * s);
+      gfx.fillRect(2 * s, -11 * s, 1 * s, 1 * s);
+      // Shoulder-length dark hair
+      gfx.fillStyle(hairColor, 1);
+      gfx.fillRect(-7 * s, -23 * s, 14 * s, 6 * s);
+      gfx.fillRect(-8 * s, -21 * s, 16 * s, 4 * s);
+      gfx.fillRect(-9 * s, -17 * s, 3 * s, 12 * s);
+      gfx.fillRect(6 * s, -17 * s, 3 * s, 12 * s);
+      gfx.fillRect(-8 * s, -6 * s, 2 * s, 2 * s);
+      gfx.fillRect(6 * s, -6 * s, 2 * s, 2 * s);
+      gfx.fillRect(-5 * s, -18 * s, 10 * s, 2 * s);
+    } else {
+      // Default smile
+      gfx.fillRect(-3 * s, -10 * s, 6 * s, 1 * s);
+      // Default hat
+      gfx.fillStyle(hairColor, 1);
+      gfx.fillRect(-7 * s, -24 * s, 14 * s, 7 * s);
+      gfx.fillRect(-5 * s, -26 * s, 10 * s, 3 * s);
+    }
+
+    // Name label
     this.add.text(x, y + 25 * s, name, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '11px',
-      color: '#FFFFFF',
-      stroke: '#000000',
-      strokeThickness: 3
+      fontFamily: FONT_TITLE,
+      fontSize: '12px',
+      fontStyle: 'bold',
+      color: '#FFFFFF'
     }).setOrigin(0.5);
   }
 
@@ -381,39 +409,40 @@ class LobbyScene extends Phaser.Scene {
     this.children.removeAll(true);
   }
 
-  createButton(x, y, text, callback, color, width) {
-    color = color || LEGO_COLORS.RED;
-    width = width || 200;
+  createBrickButton(x, y, text, callback, color, width) {
+    color = color || LEGO_COLORS.GREEN;
+    width = width || 240;
     const hw = width / 2;
+    const h = 42;
     const btn = this.add.container(x, y);
     const c = Phaser.Display.Color.HexStringToColor(color);
 
     const bg = this.add.graphics();
-    bg.fillStyle(c.color, 1);
-    bg.fillRoundedRect(-hw, -20, width, 40, 6);
+    const drawBtn = (fillAlpha, borderAlpha, darken) => {
+      bg.clear();
+      bg.fillStyle(c.color, fillAlpha);
+      bg.fillRoundedRect(-hw, -h / 2, width, h, 6);
+      bg.fillStyle(c.darken(darken).color, fillAlpha + 0.1);
+      bg.fillRoundedRect(-hw, h / 2 - 6, width, 6, { bl: 6, br: 6 });
+      bg.lineStyle(1, c.lighten(15).color, borderAlpha);
+      bg.strokeRoundedRect(-hw, -h / 2, width, h, 6);
+    };
+    drawBtn(0.8, 0.25, 25);
 
-    const label = this.add.text(0, -3, text, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '10px',
+    const label = this.add.text(0, 0, text, {
+      fontFamily: FONT_TITLE,
+      fontSize: '12px',
+      fontStyle: 'bold',
       color: '#FFFFFF',
-      stroke: '#000000',
-      strokeThickness: 2
+      letterSpacing: 1
     }).setOrigin(0.5);
 
     btn.add([bg, label]);
-    btn.setSize(width, 40);
+    btn.setSize(width, h);
     btn.setInteractive({ useHandCursor: true });
 
-    btn.on('pointerover', () => {
-      bg.clear();
-      bg.fillStyle(c.lighten(20).color, 1);
-      bg.fillRoundedRect(-hw, -20, width, 40, 6);
-    });
-    btn.on('pointerout', () => {
-      bg.clear();
-      bg.fillStyle(c.color, 1);
-      bg.fillRoundedRect(-hw, -20, width, 40, 6);
-    });
+    btn.on('pointerover', () => { drawBtn(1, 0.5, 15); label.setColor(LEGO_COLORS.YELLOW); });
+    btn.on('pointerout', () => { drawBtn(0.8, 0.25, 25); label.setColor('#FFFFFF'); });
     btn.on('pointerdown', callback);
     return btn;
   }

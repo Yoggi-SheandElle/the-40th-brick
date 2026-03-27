@@ -17,13 +17,22 @@ const config = {
   },
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    min: { width: 480, height: 270 },
+    max: { width: 1920, height: 1080 }
+  },
+  render: {
+    pixelArt: false,
+    antialias: true,
+    antialiasGL: true,
+    roundPixels: false
   },
   input: {
     activePointers: 2,
     touch: {
       capture: true
-    }
+    },
+    gamepad: true
   },
   scene: [
     BootScene,
@@ -40,7 +49,7 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-// Handle orientation changes
+// Handle orientation changes and DPI
 window.addEventListener('resize', () => {
   game.scale.refresh();
 });
