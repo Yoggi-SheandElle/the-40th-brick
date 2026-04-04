@@ -137,8 +137,11 @@ class WorldMapScene extends Phaser.Scene {
   }
 
   isChapterUnlocked(num) {
-    const prevAchievements = CHAPTER_ACHIEVEMENTS[num - 1] || [];
-    return prevAchievements.every(a => (this.unlockedAchievements || []).includes(a));
+    // Use SaveManager as source of truth (persists in localStorage)
+    const progress = SaveManager.getProgress();
+    const roomsPerChapter = 10;
+    const requiredRooms = (num - 1) * roomsPerChapter;
+    return progress.solved >= requiredRooms;
   }
 
   drawChapterNode(x, y, chapter) {

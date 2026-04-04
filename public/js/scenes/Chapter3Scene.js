@@ -189,9 +189,15 @@ class Chapter3Scene extends Phaser.Scene {
     // Draw the Eye of Sauron
     const eye = this.add.graphics();
     eye.fillStyle(0xFF4400, 1);
-    eye.fillEllipse(cx, 100, 60, 30);
+    eye.beginPath();
+    eye.arc(cx, 100, 30, 0, Math.PI * 2);
+    eye.closePath();
+    eye.fillPath();
     eye.fillStyle(0x1B2A34, 1);
-    eye.fillEllipse(cx, 100, 15, 25);
+    eye.beginPath();
+    eye.arc(cx, 100, 12, 0, Math.PI * 2);
+    eye.closePath();
+    eye.fillPath();
     this.roomContainer.add(eye);
 
     // Beam that sweeps
@@ -615,6 +621,7 @@ class Chapter3Scene extends Phaser.Scene {
   }
 
   nextRoom() {
+    SaveManager.solveRoom(this.chapter || 3, (this.currentRoom || 0) + 1);
     if (this.currentRoom >= this.totalRooms - 1) {
       const chapterAchievements = CHAPTER_ACHIEVEMENTS[this.chapter] || [];
       const firstAchievement = chapterAchievements[0];

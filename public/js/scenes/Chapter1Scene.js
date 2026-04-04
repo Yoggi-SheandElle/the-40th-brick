@@ -212,7 +212,6 @@ class Chapter1Scene extends Phaser.Scene {
     const cx = GAME_WIDTH / 2;
 
     if (correct) {
-      // Success!
       const successText = this.add.text(cx, GAME_HEIGHT / 2, 'PERFECT!', {
         fontFamily: '"Press Start 2P"',
         fontSize: '24px',
@@ -292,7 +291,8 @@ class Chapter1Scene extends Phaser.Scene {
       hitArea.on('pointerdown', () => {
         this.playerSequence.push(color);
         // Flash effect
-        this.cameras.main.flash(100, ...Phaser.Display.Color.HexStringToColor(color).color32);
+        const fc = Phaser.Display.Color.HexStringToColor(color);
+        this.cameras.main.flash(100, fc.red, fc.green, fc.blue);
 
         network.sendPuzzleAction('seq_press', { color });
 
@@ -490,6 +490,7 @@ class Chapter1Scene extends Phaser.Scene {
   }
 
   nextRoom() {
+    SaveManager.solveRoom(this.chapter || 1, (this.currentRoom || 0) + 1);
     if (this.currentRoom >= this.totalRooms - 1) {
       // Chapter complete!
       const chapterAchievements = CHAPTER_ACHIEVEMENTS[this.chapter] || [];

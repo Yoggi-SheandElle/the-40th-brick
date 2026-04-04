@@ -556,6 +556,7 @@ class FinaleScene extends Phaser.Scene {
   }
 
   nextRoom() {
+    SaveManager.solveRoom(this.chapter || 4, (this.currentRoom || 0) + 1);
     if (this.currentRoom >= this.totalRooms - 1) {
       this.showBirthdayReveal();
       return;

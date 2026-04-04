@@ -79,42 +79,46 @@ class NetworkManager {
     });
   }
 
+  _send(event, data) {
+    if (this.socket) this.socket.emit(event, data);
+  }
+
   createRoom(playerName) {
-    this.socket.emit('create_room', playerName);
+    this._send('create_room', playerName);
   }
 
   startSolo(playerName) {
     this.solo = true;
     this.playerRole = 'host';
-    this.socket.emit('start_solo', playerName);
+    this._send('start_solo', playerName);
   }
 
   joinRoom(code, playerName) {
-    this.socket.emit('join_room', { code, playerName });
+    this._send('join_room', { code, playerName });
   }
 
   setReady() {
-    this.socket.emit('player_ready');
+    this._send('player_ready');
   }
 
   sendMove(x, y, anim, flipX) {
-    this.socket.emit('player_move', { x, y, anim, flipX });
+    this._send('player_move', { x, y, anim, flipX });
   }
 
   sendPuzzleAction(action, payload, state) {
-    this.socket.emit('puzzle_action', { action, payload, state });
+    this._send('puzzle_action', { action, payload, state });
   }
 
   sendChapterComplete(achievementId, nextChapter) {
-    this.socket.emit('chapter_complete', { achievementId, nextChapter });
+    this._send('chapter_complete', { achievementId, nextChapter });
   }
 
   startChapter(chapter) {
-    this.socket.emit('start_chapter', chapter);
+    this._send('start_chapter', chapter);
   }
 
   sendChat(text) {
-    this.socket.emit('chat_message', text);
+    this._send('chat_message', text);
   }
 
   // Event listener system

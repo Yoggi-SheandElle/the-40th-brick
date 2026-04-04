@@ -721,6 +721,7 @@ class Chapter2Scene extends Phaser.Scene {
   }
 
   nextRoom() {
+    SaveManager.solveRoom(this.chapter || 2, (this.currentRoom || 0) + 1);
     if (this.currentRoom >= this.totalRooms - 1) {
       const chapterAchievements = CHAPTER_ACHIEVEMENTS[this.chapter] || [];
       const firstAchievement = chapterAchievements[0];
