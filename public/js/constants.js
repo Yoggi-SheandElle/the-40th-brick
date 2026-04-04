@@ -45,8 +45,8 @@ const COLORS = {
   GLOW: hexToInt(LEGO_COLORS.CYAN)
 };
 
-const GAME_WIDTH = 960;
-const GAME_HEIGHT = 540;
+const GAME_WIDTH = 1280;
+const GAME_HEIGHT = 720;
 
 const PLAYER_SPEED = 160;
 const PLAYER_WIDTH = 28;

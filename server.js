@@ -399,8 +399,8 @@ io.on('connection', (socket) => {
 });
 
 // Game bounds for position sanitization
-const GAME_WIDTH_MAX = 960;
-const GAME_HEIGHT_MAX = 540;
+const GAME_WIDTH_MAX = 1280;
+const GAME_HEIGHT_MAX = 720;
 
 // Stale room cleanup every 30 minutes
 setInterval(() => {
