@@ -66,23 +66,33 @@ class LobbyScene extends Phaser.Scene {
     this.drawLobbyPlayer(cx - 180, cy + 30, 'Ante', LEGO_COLORS.BRIGHT_PINK);
 
     // Right side: Name input + buttons
-    this.add.text(cx + 80, cy - 60, 'YOUR NAME', {
+    const savedName = SaveManager.getData().playerName || 'Ante';
+
+    this.add.text(cx + 80, cy - 70, 'YOUR NAME', {
       fontFamily: FONT_MONO,
-      fontSize: '10px',
+      fontSize: '13px',
+      fontStyle: 'bold',
       color: LEGO_COLORS.CYAN,
       letterSpacing: 3
     }).setOrigin(0.5);
 
-    this.nameInput = this.add.dom(cx + 80, cy - 25).createFromHTML(
-      '<input type="text" id="nameInput" value="Ante" maxlength="12" ' +
-      'style="font-family: Orbitron, monospace; font-size: 18px; padding: 10px 24px; ' +
-      'background: rgba(0,212,255,0.06); color: #F2CD37; border: 2px solid rgba(0,212,255,0.3); ' +
-      'text-align: center; outline: none; width: 240px; border-radius: 8px; letter-spacing: 2px;" />'
+    this.add.text(cx + 80, cy - 52, 'Type any name you want!', {
+      fontFamily: FONT_BODY,
+      fontSize: '12px',
+      color: '#6A7A8A'
+    }).setOrigin(0.5);
+
+    this.nameInput = this.add.dom(cx + 80, cy - 20).createFromHTML(
+      '<input type="text" id="nameInput" value="' + savedName + '" maxlength="12" ' +
+      'style="font-family: Orbitron, monospace; font-size: 20px; padding: 12px 24px; ' +
+      'background: rgba(0,212,255,0.08); color: #F2CD37; border: 2px solid rgba(0,212,255,0.4); ' +
+      'text-align: center; outline: none; width: 260px; border-radius: 10px; letter-spacing: 3px;" />'
     );
 
     // Brick button - START (right side, below input)
-    this.createBrickButton(cx + 80, cy + 40, 'START ADVENTURE', () => {
+    this.createBrickButton(cx + 80, cy + 45, 'START ADVENTURE', () => {
       const name = document.getElementById('nameInput')?.value || 'Ante';
+      SaveManager.setPlayer(name, '');
       this.cameras.main.fadeOut(400, 10, 14, 23);
       this.time.delayedCall(400, () => network.startSolo(name));
     }, LEGO_COLORS.GREEN, 260);
