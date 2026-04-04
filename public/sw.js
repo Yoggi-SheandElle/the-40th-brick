@@ -1,9 +1,10 @@
 // The 40th Brick - Service Worker for offline play
-const CACHE_NAME = '40th-brick-v1';
+const CACHE_NAME = '40th-brick-v2';
 const ASSETS = [
   '/',
   '/index.html',
   '/css/style.css',
+  '/js/phaser.min.js',
   '/js/constants.js',
   '/js/gamepad.js',
   '/js/save.js',
@@ -52,7 +53,6 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   // Skip socket.io and API requests
   if (event.request.url.includes('/socket.io/') ||
-      event.request.url.includes('cdn.jsdelivr.net') ||
       event.request.url.includes('fonts.googleapis.com') ||
       event.request.url.includes('fonts.gstatic.com')) {
     return event.respondWith(

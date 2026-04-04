@@ -41,7 +41,7 @@ app.use((req, res, next) => {
   // CSP for game assets
   res.setHeader('Content-Security-Policy',
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; " +
+    "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "font-src 'self' https://fonts.gstatic.com; " +
     "connect-src 'self' wss: ws:; " +
