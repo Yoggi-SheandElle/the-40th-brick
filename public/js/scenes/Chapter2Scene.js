@@ -67,14 +67,16 @@ class Chapter2Scene extends Phaser.Scene {
     this.drawHouse();
 
     // Instructions
-    const instrText = isHost
-      ? "You see where burglars will enter!\nTell Yossi where to place traps."
-      : "Ante sees the burglar paths!\nClick rooms to place traps.";
+    const instrText = isSolo()
+      ? "Place traps where burglars will enter!\nClick rooms to set traps."
+      : isHost
+        ? "You see where burglars will enter!\nTell your partner where to place traps."
+        : "Your partner sees the burglar paths!\nClick rooms to place traps.";
 
     this.roomContainer.add(
       this.add.text(cx, 55, instrText, {
         fontFamily: '"Press Start 2P"',
-        fontSize: '7px',
+        fontSize: '9px',
         color: LEGO_COLORS.WHITE,
         align: 'center',
         lineSpacing: 6
@@ -124,7 +126,7 @@ class Chapter2Scene extends Phaser.Scene {
       this.roomContainer.add(
         this.add.text(x + roomW / 2, y + 12, roomNames[i], {
           fontFamily: '"Press Start 2P"',
-          fontSize: '6px',
+          fontSize: '9px',
           color: LEGO_COLORS.TAN
         }).setOrigin(0.5)
       );
@@ -133,7 +135,7 @@ class Chapter2Scene extends Phaser.Scene {
       if (isHost && this.trapPositions.includes(i)) {
         const burglarIcon = this.add.text(x + roomW / 2, y + roomH / 2, 'BURGLAR', {
           fontFamily: '"Press Start 2P"',
-          fontSize: '6px',
+          fontSize: '9px',
           color: LEGO_COLORS.RED
         }).setOrigin(0.5);
         this.roomContainer.add(burglarIcon);
@@ -150,7 +152,7 @@ class Chapter2Scene extends Phaser.Scene {
       // Trap slot (clickable for guest)
       const trapLabel = this.add.text(x + roomW / 2, y + roomH - 15, '', {
         fontFamily: '"Press Start 2P"',
-        fontSize: '7px',
+        fontSize: '9px',
         color: LEGO_COLORS.GREEN
       }).setOrigin(0.5);
       this.roomContainer.add(trapLabel);
@@ -213,7 +215,7 @@ class Chapter2Scene extends Phaser.Scene {
     this.roomContainer.add(
       this.add.text(cx, GAME_HEIGHT - 35, `"${quote.text}"`, {
         fontFamily: '"Press Start 2P"',
-        fontSize: '6px',
+        fontSize: '9px',
         color: LEGO_COLORS.GREY,
         wordWrap: { width: 600 },
         align: 'center'
@@ -255,7 +257,7 @@ class Chapter2Scene extends Phaser.Scene {
     this.roomContainer.add(
       this.add.text(trapX + 30, floorY - 55, 'TRAP', {
         fontFamily: '"Press Start 2P"',
-        fontSize: '6px',
+        fontSize: '9px',
         color: LEGO_COLORS.RED
       }).setOrigin(0.5)
     );
@@ -354,11 +356,13 @@ class Chapter2Scene extends Phaser.Scene {
     this.playerSequence = [];
 
     this.roomContainer.add(
-      this.add.text(cx, 60, isHost
-        ? 'Tell Yossi the trap order!'
-        : 'Place traps in the order Ante tells you!', {
+      this.add.text(cx, 60, isSolo()
+        ? 'Memorize the trap sequence!\nClick traps in the correct order.'
+        : isHost
+          ? 'Tell your partner the trap order!'
+          : 'Place traps in the order your partner tells you!', {
         fontFamily: '"Press Start 2P"',
-        fontSize: '7px',
+        fontSize: '9px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5)
     );
@@ -377,7 +381,7 @@ class Chapter2Scene extends Phaser.Scene {
         this.roomContainer.add(
           this.add.text(cx, 110 + i * 20, `${i + 1}. ${trap}`, {
             fontFamily: '"Press Start 2P"',
-            fontSize: '7px',
+            fontSize: '9px',
             color: LEGO_COLORS.YELLOW
           }).setOrigin(0.5)
         );
@@ -407,7 +411,7 @@ class Chapter2Scene extends Phaser.Scene {
       bg.fillRoundedRect(-55, -15, 110, 30, 4);
       const lbl = this.add.text(0, -2, trap, {
         fontFamily: '"Press Start 2P"',
-        fontSize: '6px',
+        fontSize: '9px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5);
       btn.add([bg, lbl]);
@@ -496,11 +500,13 @@ class Chapter2Scene extends Phaser.Scene {
     this.doorsOpened = new Array(gridSize * gridSize).fill(false);
 
     this.roomContainer.add(
-      this.add.text(cx, 55, isHost
-        ? "You see Kevin's path! Tell Yossi which doors to open."
-        : "Open doors so Kevin can escape! Ante sees the path.", {
+      this.add.text(cx, 55, isSolo()
+        ? "Open the right doors for Kevin's escape!\nClick doors along the path."
+        : isHost
+          ? "You see Kevin's path! Tell your partner which doors to open."
+          : "Open doors so Kevin can escape! Your partner sees the path.", {
         fontFamily: '"Press Start 2P"',
-        fontSize: '6px',
+        fontSize: '9px',
         color: LEGO_COLORS.WHITE,
         align: 'center',
         lineSpacing: 5
@@ -526,7 +532,7 @@ class Chapter2Scene extends Phaser.Scene {
         const pathMarker = this.add.text(x + (cellW - 4) / 2, y + (cellH - 4) / 2,
           i === 0 ? 'START' : (i === this.mazePath[this.mazePath.length - 1] ? 'EXIT' : this.mazePath.indexOf(i).toString()), {
           fontFamily: '"Press Start 2P"',
-          fontSize: '7px',
+          fontSize: '9px',
           color: LEGO_COLORS.GREEN
         }).setOrigin(0.5);
         this.roomContainer.add(pathMarker);
@@ -535,7 +541,7 @@ class Chapter2Scene extends Phaser.Scene {
       // Door label
       const doorLabel = this.add.text(x + (cellW - 4) / 2, y + (cellH - 4) / 2, 'DOOR', {
         fontFamily: '"Press Start 2P"',
-        fontSize: '6px',
+        fontSize: '9px',
         color: LEGO_COLORS.GREY
       }).setOrigin(0.5);
       if (isHost) doorLabel.setAlpha(0.3);
@@ -626,14 +632,19 @@ class Chapter2Scene extends Phaser.Scene {
       { name: 'Fingers', color: LEGO_COLORS.ORANGE }
     ];
 
-    // Generate pattern
+    // Generate repeating pattern (e.g. A-B-C-A-B-C, answer is next in cycle)
     const patternLen = 3 + Math.floor(this.currentRoom / 3);
+    const basePattern = [];
+    const baseLen = 2 + Math.floor(Math.random() * 2); // 2-3 base elements
+    for (let i = 0; i < baseLen; i++) {
+      basePattern.push(Math.floor(Math.random() * burglarTypes.length));
+    }
     this.pattern = [];
     for (let i = 0; i < patternLen; i++) {
-      this.pattern.push(Math.floor(Math.random() * burglarTypes.length));
+      this.pattern.push(basePattern[i % baseLen]);
     }
-    // The answer is the next in the pattern (simple repeat)
-    this.correctAnswer = this.pattern[this.pattern.length % patternLen];
+    // The answer is the next element in the repeating cycle
+    this.correctAnswer = basePattern[this.pattern.length % baseLen];
 
     this.roomContainer.add(
       this.add.text(cx, 60, "Who's coming next?\nStudy the pattern!", {
@@ -659,7 +670,7 @@ class Chapter2Scene extends Phaser.Scene {
       this.roomContainer.add(
         this.add.text(bx, 150, b.name, {
           fontFamily: '"Press Start 2P"',
-          fontSize: '5px',
+          fontSize: '9px',
           color: LEGO_COLORS.GREY
         }).setOrigin(0.5)
       );
@@ -686,7 +697,7 @@ class Chapter2Scene extends Phaser.Scene {
       bg.fillRoundedRect(-35, -20, 70, 40, 4);
       const lbl = this.add.text(0, -2, b.name, {
         fontFamily: '"Press Start 2P"',
-        fontSize: '7px',
+        fontSize: '9px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5);
       btn.add([bg, lbl]);
@@ -764,7 +775,7 @@ class Chapter2Scene extends Phaser.Scene {
       let correctCount = this.trapPositions.filter(pos => this.playerTraps[pos]).length;
       const text = this.add.text(cx, GAME_HEIGHT / 2 + 100, `${correctCount}/${this.trapPositions.length} traps correct. Try again!`, {
         fontFamily: '"Press Start 2P"',
-        fontSize: '7px',
+        fontSize: '9px',
         color: LEGO_COLORS.RED
       }).setOrigin(0.5);
       this.time.delayedCall(2000, () => text.destroy());

@@ -328,7 +328,7 @@ class FinaleScene extends Phaser.Scene {
       this.roomContainer.add(
         this.add.text(cx, by + 5, `"${quote}"`, {
           fontFamily: '"Press Start 2P"',
-          fontSize: '6px',
+          fontSize: '9px',
           color: LEGO_COLORS.WHITE,
           wordWrap: { width: 500 },
           align: 'center',
@@ -456,11 +456,7 @@ class FinaleScene extends Phaser.Scene {
     // Build-up animation: bricks falling to form "40"
     const brickPositions = [];
     // Number "4"
-    const four = [
-      [0,0],[0,1],[0,2],[0,3],[0,4],
-      [1,2],
-      [2,0],[2,1],[2,2]
-    ];
+    const four = [[0,0],[0,1],[0,2],[1,2],[2,0],[2,1],[2,2],[2,3],[2,4]];
     // Number "0"
     const zero = [
       [4,0],[4,1],[4,2],[4,3],[4,4],
@@ -530,7 +526,7 @@ class FinaleScene extends Phaser.Scene {
       const msg = this.add.text(cx, cy + 120,
         'From Croatia to Billund, from fan to Design Master.\nEvery brick you\'ve placed tells a story.\nHere\'s to 40 more years of building dreams!', {
         fontFamily: '"Press Start 2P"',
-        fontSize: '6px',
+        fontSize: '9px',
         color: LEGO_COLORS.WHITE,
         align: 'center',
         lineSpacing: 8,
@@ -543,7 +539,7 @@ class FinaleScene extends Phaser.Scene {
       const sig = this.add.text(cx, cy + 190,
         'Designed by Yossi, for Ante\nEvery brick counts.', {
         fontFamily: '"Press Start 2P"',
-        fontSize: '7px',
+        fontSize: '9px',
         color: LEGO_COLORS.YELLOW,
         align: 'center',
         lineSpacing: 6
@@ -591,8 +587,11 @@ class FinaleScene extends Phaser.Scene {
       });
     }
 
-    // Repeat confetti
-    this.time.delayedCall(3000, () => this.launchConfetti());
+    // Repeat confetti (limited to 8 rounds)
+    this.confettiCount = (this.confettiCount || 0) + 1;
+    if (this.confettiCount < 8) {
+      this.time.delayedCall(3000, () => this.launchConfetti());
+    }
   }
 
   showFeedback(msg, color, onComplete) {

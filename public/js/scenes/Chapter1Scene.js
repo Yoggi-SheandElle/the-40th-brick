@@ -260,7 +260,123 @@ class Chapter1Scene extends Phaser.Scene {
 
   // PUZZLE 2: Pattern - Recreate a LEGO stud pattern on a grid
   createPatternPuzzle() {
-    this.createColorMatchPuzzle(); // Placeholder - will implement grid pattern
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
+    const gridSize = 3 + Math.floor(this.currentRoom / 4);
+    const colors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN, LEGO_COLORS.YELLOW];
+
+    // Generate target pattern
+    const pattern = [];
+    for (let r = 0; r < gridSize; r++) {
+      pattern[r] = [];
+      for (let c = 0; c < gridSize; c++) {
+        pattern[r][c] = colors[Math.floor(Math.random() * colors.length)];
+      }
+    }
+    this.patternAnswer = Array.from({length: gridSize}, () => new Array(gridSize).fill(null));
+
+    this.roomContainer.add(
+      this.add.text(cx, 55, 'Recreate the pattern below!\nClick cells to cycle colors.', {
+        fontFamily: '"Rajdhani"', fontSize: '14px', color: LEGO_COLORS.WHITE,
+        align: 'center', lineSpacing: 4
+      }).setOrigin(0.5)
+    );
+
+    // Target pattern (top)
+    this.roomContainer.add(
+      this.add.text(cx - 120, 85, 'TARGET:', {
+        fontFamily: '"Orbitron"', fontSize: '10px', color: LEGO_COLORS.CYAN, letterSpacing: 1
+      }).setOrigin(0, 0.5)
+    );
+    const cellSize = Math.min(30, 180 / gridSize);
+    const targetStartX = cx - 120;
+    const targetStartY = 100;
+    const targetGfx = this.add.graphics();
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        targetGfx.fillStyle(Phaser.Display.Color.HexStringToColor(pattern[r][c]).color, 1);
+        targetGfx.fillRect(targetStartX + c * (cellSize + 2), targetStartY + r * (cellSize + 2), cellSize, cellSize);
+      }
+    }
+    this.roomContainer.add(targetGfx);
+
+    // Player grid (bottom)
+    this.roomContainer.add(
+      this.add.text(cx - 120, 100 + gridSize * (cellSize + 2) + 15, 'YOUR BUILD:', {
+        fontFamily: '"Orbitron"', fontSize: '10px', color: LEGO_COLORS.CYAN, letterSpacing: 1
+      }).setOrigin(0, 0.5)
+    );
+    const buildStartY = 100 + gridSize * (cellSize + 2) + 30;
+    this.patternCells = [];
+    const focusItems = [];
+    for (let r = 0; r < gridSize; r++) {
+      this.patternCells[r] = [];
+      for (let c = 0; c < gridSize; c++) {
+        const cellX = targetStartX + c * (cellSize + 2);
+        const cellY = buildStartY + r * (cellSize + 2);
+        const cell = this.add.graphics();
+        cell.fillStyle(0x444444, 1);
+        cell.fillRect(cellX, cellY, cellSize, cellSize);
+        cell.lineStyle(1, 0x666666, 1);
+        cell.strokeRect(cellX, cellY, cellSize, cellSize);
+        this.roomContainer.add(cell);
+        this.patternCells[r][c] = { gfx: cell, colorIndex: -1, x: cellX, y: cellY };
+
+        const hitArea = this.add.rectangle(cellX + cellSize/2, cellY + cellSize/2, cellSize, cellSize, 0x000000, 0);
+        hitArea.setInteractive({ useHandCursor: true });
+        const row = r, col = c;
+        hitArea.on('pointerdown', () => {
+          const pc = this.patternCells[row][col];
+          pc.colorIndex = (pc.colorIndex + 1) % colors.length;
+          this.patternAnswer[row][col] = colors[pc.colorIndex];
+          pc.gfx.clear();
+          pc.gfx.fillStyle(Phaser.Display.Color.HexStringToColor(colors[pc.colorIndex]).color, 1);
+          pc.gfx.fillRect(pc.x, pc.y, cellSize, cellSize);
+          network.sendPuzzleAction('pattern_set', { r: row, c: col, color: colors[pc.colorIndex] });
+        });
+        this.roomContainer.add(hitArea);
+        focusItems.push({ element: hitArea, x: cellX + cellSize/2, y: cellY + cellSize/2, callback: () => hitArea.emit('pointerdown') });
+      }
+    }
+
+    // Check button
+    const checkY = buildStartY + gridSize * (cellSize + 2) + 15;
+    const checkBtn = this.add.container(cx, checkY);
+    const bg = this.add.graphics();
+    bg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 1);
+    bg.fillRoundedRect(-60, -15, 120, 30, 4);
+    const lbl = this.add.text(0, -2, 'CHECK', {
+      fontFamily: '"Press Start 2P"', fontSize: '10px', color: LEGO_COLORS.WHITE
+    }).setOrigin(0.5);
+    checkBtn.add([bg, lbl]);
+    checkBtn.setSize(120, 30);
+    checkBtn.setInteractive({ useHandCursor: true });
+    checkBtn.on('pointerdown', () => {
+      let correct = true;
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          if (this.patternAnswer[r][c] !== pattern[r][c]) { correct = false; break; }
+        }
+        if (!correct) break;
+      }
+      if (correct) {
+        const text = this.add.text(cx, cy, 'PERFECT!', {
+          fontFamily: '"Press Start 2P"', fontSize: '20px', color: LEGO_COLORS.GREEN,
+          stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5);
+        this.time.delayedCall(1000, () => { text.destroy(); this.nextRoom(); });
+      } else {
+        const text = this.add.text(cx, cy + 80, 'Not quite! Try again.', {
+          fontFamily: '"Press Start 2P"', fontSize: '9px', color: LEGO_COLORS.RED
+        }).setOrigin(0.5);
+        this.time.delayedCall(1500, () => text.destroy());
+      }
+    });
+    this.roomContainer.add(checkBtn);
+    focusItems.push({ element: checkBtn, x: cx, y: checkY, callback: () => checkBtn.emit('pointerdown') });
+    InputSystem.setFocusables(focusItems);
+
+    drawQuoteBox(this, this.roomContainer, 'friends');
   }
 
   // PUZZLE 3: Sequence - Remember and repeat a sequence of brick colors
@@ -280,7 +396,7 @@ class Chapter1Scene extends Phaser.Scene {
     this.roomContainer.add(
       this.add.text(cx, 60, 'Watch the sequence, then repeat it!', {
         fontFamily: '"Press Start 2P"',
-        fontSize: '7px',
+        fontSize: '9px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5)
     );
@@ -443,7 +559,7 @@ class Chapter1Scene extends Phaser.Scene {
 
       const label = this.add.text(x, y, name, {
         fontFamily: '"Press Start 2P"',
-        fontSize: '6px',
+        fontSize: '9px',
         color: LEGO_COLORS.BLACK,
         align: 'center'
       }).setOrigin(0.5).setVisible(false);
@@ -508,7 +624,123 @@ class Chapter1Scene extends Phaser.Scene {
 
   // PUZZLE 5: Brick Build - Drag bricks to complete a structure
   createBrickBuildPuzzle() {
-    this.createColorMatchPuzzle(); // Placeholder
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
+    const numBricks = 4 + Math.floor(this.currentRoom / 3);
+    const colors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN, LEGO_COLORS.YELLOW, LEGO_COLORS.ORANGE, LEGO_COLORS.BRIGHT_PINK];
+
+    // Generate correct order
+    const correctOrder = [];
+    for (let i = 0; i < numBricks; i++) {
+      correctOrder.push(colors[i % colors.length]);
+    }
+    // Shuffled order for player
+    const shuffled = [...correctOrder].sort(() => Math.random() - 0.5);
+    this.buildOrder = [...shuffled];
+    this.buildTarget = correctOrder;
+
+    this.roomContainer.add(
+      this.add.text(cx, 55, 'Arrange the bricks in the correct order!\nClick two bricks to swap them.', {
+        fontFamily: '"Rajdhani"', fontSize: '14px', color: LEGO_COLORS.WHITE,
+        align: 'center', lineSpacing: 4
+      }).setOrigin(0.5)
+    );
+
+    // Target order display
+    this.roomContainer.add(
+      this.add.text(cx, 90, 'TARGET ORDER:', {
+        fontFamily: '"Orbitron"', fontSize: '10px', color: LEGO_COLORS.CYAN, letterSpacing: 1
+      }).setOrigin(0.5)
+    );
+    const targetGfx = this.add.graphics();
+    correctOrder.forEach((color, i) => {
+      const bx = cx - ((numBricks - 1) * 35) / 2 + i * 35;
+      targetGfx.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
+      targetGfx.fillRoundedRect(bx - 14, 105, 28, 20, 3);
+    });
+    this.roomContainer.add(targetGfx);
+
+    // Player bricks (swappable)
+    this.roomContainer.add(
+      this.add.text(cx, 155, 'YOUR BUILD:', {
+        fontFamily: '"Orbitron"', fontSize: '10px', color: LEGO_COLORS.CYAN, letterSpacing: 1
+      }).setOrigin(0.5)
+    );
+
+    this.selectedBrick = -1;
+    this.brickSlots = [];
+    const focusItems = [];
+
+    const redrawBricks = () => {
+      this.brickSlots.forEach((slot, i) => {
+        slot.gfx.clear();
+        slot.gfx.fillStyle(Phaser.Display.Color.HexStringToColor(this.buildOrder[i]).color, 1);
+        slot.gfx.fillRoundedRect(slot.x - 20, 170, 40, 30, 3);
+        if (i === this.selectedBrick) {
+          slot.gfx.lineStyle(2, 0xFFFFFF, 1);
+          slot.gfx.strokeRoundedRect(slot.x - 20, 170, 40, 30, 3);
+        }
+      });
+    };
+
+    for (let i = 0; i < numBricks; i++) {
+      const bx = cx - ((numBricks - 1) * 50) / 2 + i * 50;
+      const slotGfx = this.add.graphics();
+      this.roomContainer.add(slotGfx);
+      this.brickSlots.push({ gfx: slotGfx, x: bx });
+
+      const hitArea = this.add.rectangle(bx, 185, 40, 30, 0x000000, 0);
+      hitArea.setInteractive({ useHandCursor: true });
+      const idx = i;
+      hitArea.on('pointerdown', () => {
+        if (this.selectedBrick === -1) {
+          this.selectedBrick = idx;
+        } else {
+          // Swap
+          const temp = this.buildOrder[this.selectedBrick];
+          this.buildOrder[this.selectedBrick] = this.buildOrder[idx];
+          this.buildOrder[idx] = temp;
+          this.selectedBrick = -1;
+          network.sendPuzzleAction('brick_swap', { a: this.selectedBrick, b: idx });
+        }
+        redrawBricks();
+      });
+      this.roomContainer.add(hitArea);
+      focusItems.push({ element: hitArea, x: bx, y: 185, callback: () => hitArea.emit('pointerdown') });
+    }
+    redrawBricks();
+
+    // Check button
+    const submitBtn = this.add.container(cx, 250);
+    const bg = this.add.graphics();
+    bg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 1);
+    bg.fillRoundedRect(-60, -15, 120, 30, 4);
+    const lbl = this.add.text(0, -2, 'CHECK', {
+      fontFamily: '"Press Start 2P"', fontSize: '10px', color: LEGO_COLORS.WHITE
+    }).setOrigin(0.5);
+    submitBtn.add([bg, lbl]);
+    submitBtn.setSize(120, 30);
+    submitBtn.setInteractive({ useHandCursor: true });
+    submitBtn.on('pointerdown', () => {
+      const correct = this.buildOrder.every((c, i) => c === this.buildTarget[i]);
+      if (correct) {
+        const text = this.add.text(cx, cy, 'PERFECT BUILD!', {
+          fontFamily: '"Press Start 2P"', fontSize: '20px', color: LEGO_COLORS.GREEN,
+          stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5);
+        this.time.delayedCall(1000, () => { text.destroy(); this.nextRoom(); });
+      } else {
+        const text = this.add.text(cx, cy + 50, 'Not in order! Try swapping.', {
+          fontFamily: '"Press Start 2P"', fontSize: '9px', color: LEGO_COLORS.RED
+        }).setOrigin(0.5);
+        this.time.delayedCall(1500, () => text.destroy());
+      }
+    });
+    this.roomContainer.add(submitBtn);
+    focusItems.push({ element: submitBtn, x: cx, y: 250, callback: () => submitBtn.emit('pointerdown') });
+    InputSystem.setFocusables(focusItems);
+
+    drawQuoteBox(this, this.roomContainer, 'friends');
   }
 
   nextRoom() {
