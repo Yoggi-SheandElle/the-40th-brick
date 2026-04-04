@@ -1,12 +1,13 @@
 // The 40th Brick - Main Game Entry
-// Render at native screen resolution for crisp text on 4K TVs and high-DPI screens
-// Game logic stays at 960x540, Phaser scales the canvas to fill the screen
+// Optimized for: 75" 4K TV, Steam Deck (1280x800), Mobile, PS4 controller
+
 const DPR = window.devicePixelRatio || 1;
+const platform = detectPlatform();
 
 const config = {
   type: Phaser.WEBGL,
-  width: GAME_WIDTH * DPR,
-  height: GAME_HEIGHT * DPR,
+  width: GAME_WIDTH * Math.min(DPR, 2),
+  height: GAME_HEIGHT * Math.min(DPR, 2),
   parent: 'game-container',
   backgroundColor: '#0A0E17',
   dom: {
@@ -27,10 +28,14 @@ const config = {
     pixelArt: false,
     antialias: true,
     antialiasGL: true,
-    roundPixels: false
+    roundPixels: true
+  },
+  fps: {
+    target: platform === 'mobile' ? 50 : 60,
+    forceSetTimeOut: false
   },
   input: {
-    activePointers: 2,
+    activePointers: 3,
     touch: {
       capture: true
     },
@@ -51,19 +56,48 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-// Scale all cameras to match the DPR so game coordinates stay at 960x540
-game.events.on('ready', () => {
-  game.scale.refresh();
-  if (DPR > 1) {
+// Scale cameras to DPR for crisp rendering on high-res displays
+const zoomFactor = Math.min(DPR, 2);
+if (zoomFactor > 1) {
+  game.events.on('ready', () => {
     game.scene.scenes.forEach(scene => {
       scene.events.on('create', () => {
-        scene.cameras.main.setZoom(DPR);
+        scene.cameras.main.setZoom(zoomFactor);
       });
     });
+  });
+}
+
+// Handle resize and orientation
+window.addEventListener('resize', () => {
+  game.scale.refresh();
+});
+
+// Pause when tab hidden (battery optimization)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    game.scene.scenes.forEach(s => {
+      if (s.scene.isActive()) s.scene.pause();
+    });
+    if (game.sound) game.sound.pauseAll();
+  } else {
+    game.scene.scenes.forEach(s => {
+      if (s.scene.isPaused()) s.scene.resume();
+    });
+    if (game.sound) game.sound.resumeAll();
   }
 });
 
-// Handle orientation changes
-window.addEventListener('resize', () => {
-  game.scale.refresh();
+// Keyboard navigation support (for desktop without controller)
+document.addEventListener('keydown', (e) => {
+  const keyMap = {
+    'ArrowUp': 12, 'ArrowDown': 13, 'ArrowLeft': 14, 'ArrowRight': 15,
+    'w': 12, 's': 13, 'a': 14, 'd': 15,
+    'Enter': 0, ' ': 0, 'Escape': 1, 'Backspace': 1
+  };
+  const btn = keyMap[e.key];
+  if (btn !== undefined) {
+    InputSystem._handleNavigation(btn);
+    e.preventDefault();
+  }
 });

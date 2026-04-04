@@ -32,6 +32,7 @@ class Chapter3Scene extends Phaser.Scene {
 
   startRoom(roomIndex) {
     this.currentRoom = roomIndex;
+    InputSystem.clearFocusables();
     if (this.roomContainer) this.roomContainer.destroy();
     this.roomContainer = this.add.container(0, 0);
 
@@ -169,6 +170,18 @@ class Chapter3Scene extends Phaser.Scene {
       }
     });
     this.roomContainer.add(checkBtn);
+
+    // Register focusables for controller navigation
+    const runeFocusables = rightRunes.map((rune, i) => ({
+      element: null, x: GAME_WIDTH - 120, y: 100 + i * 50, callback: () => {
+        this.runeAnswer[i] = (this.runeAnswer[i] + 1) % (numPairs + 1);
+        const val = this.runeAnswer[i] === 0 ? '-' : this.runeAnswer[i].toString();
+        this.rightRuneSlots[i].numLabel.setText(val);
+        network.sendPuzzleAction('rune_set', { slot: i, value: this.runeAnswer[i] });
+      }
+    }));
+    runeFocusables.push({ element: checkBtn, x: cx, y: GAME_HEIGHT - 70, callback: () => checkBtn.emit('pointerdown') });
+    InputSystem.setFocusables(runeFocusables);
   }
 
   // PUZZLE 2: Eye of Sauron - dodge the sweeping eye beam
@@ -248,6 +261,23 @@ class Chapter3Scene extends Phaser.Scene {
       });
       this.roomContainer.add(hitArea);
     }
+
+    // Register focusables for controller navigation
+    const eyeFocusables = [];
+    for (let i = 0; i < totalZones; i++) {
+      const zx = 100 + (GAME_WIDTH - 200) * (i / (totalZones - 1));
+      const zy = cy + 80 + Math.sin(i * 1.5) * 40;
+      eyeFocusables.push({ element: null, x: zx, y: zy, callback: () => {
+        if (this.safeZones[i]) return;
+        this.safeZones[i] = true;
+        this.clickedZones++;
+        network.sendPuzzleAction('zone_click', { zone: i });
+        if (this.clickedZones >= totalZones) {
+          this.showSuccess('You evaded the Eye!');
+        }
+      }});
+    }
+    InputSystem.setFocusables(eyeFocusables);
 
     // Beam sweep animation
     let beamAngle = 0;
@@ -358,6 +388,23 @@ class Chapter3Scene extends Phaser.Scene {
       this.roomContainer.add(hitArea);
     });
 
+    // Register focusables for controller navigation
+    const bookFocusables = books.map((book, i) => {
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      const bx = 160 + col * 120;
+      const by = (row === 0 ? shelfY1 : shelfY2) + 35;
+      return { element: null, x: bx, y: by, callback: () => {
+        network.sendPuzzleAction('book_pick', { book: i });
+        if (i === correctBook) {
+          this.showSuccess('The ancient text reveals secrets!');
+        } else {
+          this.showError('That book crumbles to dust!');
+        }
+      }};
+    });
+    InputSystem.setFocusables(bookFocusables);
+
     // Antica's quote about Sauron's library
     this.roomContainer.add(
       this.add.text(cx, GAME_HEIGHT - 35,
@@ -465,6 +512,20 @@ class Chapter3Scene extends Phaser.Scene {
       }
     });
     this.roomContainer.add(checkBtn);
+
+    // Register focusables for controller navigation
+    const towerFocusables = [];
+    for (let i = 0; i < sections; i++) {
+      const y = 110 + i * 90 + 35;
+      towerFocusables.push({ element: null, x: cx, y, callback: () => {
+        this.towerPositions[i] = (this.towerPositions[i] + 1) % 4;
+        const symbols = ['\u25B2', '\u25B6', '\u25BC', '\u25C0'];
+        this.towerSections[i].arrow.setText(symbols[this.towerPositions[i]]);
+        network.sendPuzzleAction('tower_rotate', { section: i, position: this.towerPositions[i] });
+      }});
+    }
+    towerFocusables.push({ element: checkBtn, x: cx, y: GAME_HEIGHT - 60, callback: () => checkBtn.emit('pointerdown') });
+    InputSystem.setFocusables(towerFocusables);
   }
 
   // PUZZLE 5: Ring puzzle - pass the ring through a sequence of holders
@@ -557,6 +618,28 @@ class Chapter3Scene extends Phaser.Scene {
       });
       this.roomContainer.add(btn);
     });
+
+    // Register focusables for controller navigation
+    const ringFocusables = characters.map((name, i) => {
+      const bx = 80 + (i % 3) * 140;
+      const by = GAME_HEIGHT / 2 + 70 + Math.floor(i / 3) * 50;
+      return { element: null, x: bx, y: by, callback: () => {
+        this.ringOrder.push(name);
+        this.ringDisplay.setText(this.ringOrder.map((n, j) => `${j + 1}. ${n}`).join('\n'));
+        network.sendPuzzleAction('ring_pass', { to: name });
+        if (this.ringOrder.length === correctOrder.length) {
+          const correct = correctOrder.every((n, j) => this.ringOrder[j] === n);
+          if (correct) {
+            this.showSuccess('The Ring reaches Mount Doom!');
+          } else {
+            this.ringOrder = [];
+            this.ringDisplay.setText('');
+            this.showError('The Ring rejects this path!');
+          }
+        }
+      }};
+    });
+    InputSystem.setFocusables(ringFocusables);
   }
 
   onPuzzleUpdate(data) {

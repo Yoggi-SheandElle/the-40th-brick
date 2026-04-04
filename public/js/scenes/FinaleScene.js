@@ -29,6 +29,7 @@ class FinaleScene extends Phaser.Scene {
 
   startRoom(roomIndex) {
     this.currentRoom = roomIndex;
+    InputSystem.clearFocusables();
     if (this.roomContainer) this.roomContainer.destroy();
     this.roomContainer = this.add.container(0, 0);
 
@@ -154,6 +155,21 @@ class FinaleScene extends Phaser.Scene {
       });
       this.roomContainer.add(btn);
     });
+
+    // Register focusables for controller navigation
+    const triviaFocusables = t.options.map((opt, i) => {
+      const bx = cx + (i % 2 === 0 ? -130 : 130);
+      const by = 220 + Math.floor(i / 2) * 70;
+      return { element: null, x: bx, y: by, callback: () => {
+        network.sendPuzzleAction('trivia_answer', { answer: i });
+        if (i === t.correct) {
+          this.showFeedback('CORRECT!', LEGO_COLORS.GREEN, () => this.nextRoom());
+        } else {
+          this.showFeedback('NOPE!', LEGO_COLORS.RED);
+        }
+      }};
+    });
+    InputSystem.setFocusables(triviaFocusables);
   }
 
   // PUZZLE: Speed build - click bricks in order as fast as possible
@@ -223,6 +239,21 @@ class FinaleScene extends Phaser.Scene {
       });
       this.roomContainer.add(hitArea);
     });
+
+    // Register focusables for controller navigation
+    const speedFocusables = positions.map((pos, i) => ({
+      element: null, x: pos.x, y: pos.y, callback: () => {
+        const num = i + 1;
+        if (num === this.buildNext) {
+          this.buildNext++;
+          network.sendPuzzleAction('speed_click', { brick: num });
+          if (this.buildNext > numBricks) {
+            this.showFeedback('SPEED BUILD COMPLETE!', LEGO_COLORS.GREEN, () => this.nextRoom());
+          }
+        }
+      }
+    }));
+    InputSystem.setFocusables(speedFocusables);
 
     // Timer
     this.buildTimer = 15;
@@ -317,6 +348,20 @@ class FinaleScene extends Phaser.Scene {
       });
       this.roomContainer.add(hitArea);
     });
+
+    // Register focusables for controller navigation
+    const quoteFocusables = options.map((quote, i) => {
+      const by = 160 + i * 130;
+      return { element: null, x: cx, y: by + 5, callback: () => {
+        network.sendPuzzleAction('quote_guess', { choice: i });
+        if (i === correctFinal) {
+          this.showFeedback(`YES! - ${realQuote.source}`, LEGO_COLORS.GREEN, () => this.nextRoom());
+        } else {
+          this.showFeedback("That wasn't Ante!", LEGO_COLORS.RED);
+        }
+      }};
+    });
+    InputSystem.setFocusables(quoteFocusables);
   }
 
   // PUZZLE: Count bricks
@@ -378,6 +423,21 @@ class FinaleScene extends Phaser.Scene {
       });
       this.roomContainer.add(btn);
     });
+
+    // Register focusables for controller navigation
+    const countFocusables = options.map((num, i) => {
+      const bx = cx - 150 + i * 100;
+      const by = GAME_HEIGHT - 100;
+      return { element: null, x: bx, y: by, callback: () => {
+        network.sendPuzzleAction('count_answer', { answer: num });
+        if (num === targetCount) {
+          this.showFeedback('CORRECT!', LEGO_COLORS.GREEN, () => this.nextRoom());
+        } else {
+          this.showFeedback(`It was ${targetCount}!`, LEGO_COLORS.RED);
+        }
+      }};
+    });
+    InputSystem.setFocusables(countFocusables);
   }
 
   showBirthdayReveal() {

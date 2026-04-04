@@ -192,6 +192,35 @@ const SceneUI = {
     });
   },
 
+  // Register interactive elements as controller-focusable
+  registerFocusables(scene, items) {
+    InputSystem.clearFocusables();
+    const focusItems = items.map(item => ({
+      element: item.hitArea || item.container || item.element,
+      x: item.x,
+      y: item.y,
+      callback: item.callback,
+      originalScale: 1
+    }));
+    InputSystem.setFocusables(focusItems);
+  },
+
+  // Show controller prompt at bottom of screen
+  showControllerPrompts(scene) {
+    if (!InputSystem.connected) return null;
+    const cx = GAME_WIDTH / 2;
+    const confirmIcon = InputSystem.getButtonIcon(0);
+    const cancelIcon = InputSystem.getButtonIcon(1);
+    const promptText = scene.add.text(cx, GAME_HEIGHT - 15,
+      confirmIcon + ' Select    ' + cancelIcon + ' Back    D-Pad Navigate', {
+      fontFamily: FONT_MONO,
+      fontSize: '8px',
+      color: '#4A5A6A',
+      letterSpacing: 1
+    }).setOrigin(0.5).setDepth(200);
+    return promptText;
+  },
+
   // Premium room transition with wipe effect
   premiumTransition(scene, callback) {
     const cx = GAME_WIDTH / 2;

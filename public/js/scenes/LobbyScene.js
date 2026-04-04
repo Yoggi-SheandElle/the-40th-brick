@@ -88,10 +88,23 @@ class LobbyScene extends Phaser.Scene {
     }, LEGO_COLORS.GREEN, 260);
 
     // Back button (centered at bottom)
-    this.createBrickButton(cx, GAME_HEIGHT - 30, 'BACK', () => {
+    const backBtn = this.createBrickButton(cx, GAME_HEIGHT - 30, 'BACK', () => {
       this.cameras.main.fadeOut(300, 10, 14, 23);
       this.time.delayedCall(300, () => this.scene.start('TitleScene'));
     }, LEGO_COLORS.DARK_GREY, 140);
+
+    // Register focusables for controller navigation
+    InputSystem.setFocusables([
+      { element: null, x: cx + 80, y: cy + 40, callback: () => {
+        const name = document.getElementById('nameInput')?.value || 'Ante';
+        this.cameras.main.fadeOut(400, 10, 14, 23);
+        this.time.delayedCall(400, () => network.startSolo(name));
+      }},
+      { element: backBtn, x: cx, y: GAME_HEIGHT - 30, callback: () => {
+        this.cameras.main.fadeOut(300, 10, 14, 23);
+        this.time.delayedCall(300, () => this.scene.start('TitleScene'));
+      }}
+    ]);
   }
 
   showMultiSetup() {
@@ -128,10 +141,23 @@ class LobbyScene extends Phaser.Scene {
       this.showJoinInput();
     }, LEGO_COLORS.BLUE, 220);
 
-    this.createBrickButton(cx, GAME_HEIGHT - 35, 'BACK', () => {
+    const multiBackBtn = this.createBrickButton(cx, GAME_HEIGHT - 35, 'BACK', () => {
       this.cameras.main.fadeOut(300, 10, 14, 23);
       this.time.delayedCall(300, () => this.scene.start('TitleScene'));
     }, LEGO_COLORS.DARK_GREY, 140);
+
+    // Register focusables for controller navigation
+    InputSystem.setFocusables([
+      { element: this.createBtn, x: cx - 130, y: cy + 30, callback: () => {
+        const name = document.getElementById('nameInput')?.value || 'Player';
+        network.createRoom(name);
+      }},
+      { element: this.joinBtn, x: cx + 130, y: cy + 30, callback: () => this.showJoinInput() },
+      { element: multiBackBtn, x: cx, y: GAME_HEIGHT - 35, callback: () => {
+        this.cameras.main.fadeOut(300, 10, 14, 23);
+        this.time.delayedCall(300, () => this.scene.start('TitleScene'));
+      }}
+    ]);
   }
 
   showJoinInput() {
@@ -259,12 +285,22 @@ class LobbyScene extends Phaser.Scene {
       color: LEGO_COLORS.RED
     }).setOrigin(0.5);
 
-    this.createBrickButton(cx, 340, 'READY!', () => {
+    const readyBtn = this.createBrickButton(cx, 340, 'READY!', () => {
       network.setReady();
       this.myReady = !this.myReady;
       this.myReadyText.setText(this.myReady ? 'READY!' : 'NOT READY');
       this.myReadyText.setColor(this.myReady ? LEGO_COLORS.GREEN : LEGO_COLORS.RED);
     }, LEGO_COLORS.GREEN, 200);
+
+    // Register focusables for controller navigation
+    InputSystem.setFocusables([
+      { element: readyBtn, x: cx, y: 340, callback: () => {
+        network.setReady();
+        this.myReady = !this.myReady;
+        this.myReadyText.setText(this.myReady ? 'READY!' : 'NOT READY');
+        this.myReadyText.setColor(this.myReady ? LEGO_COLORS.GREEN : LEGO_COLORS.RED);
+      }}
+    ]);
 
     const bg = this.add.graphics();
     bg.fillStyle(0x131824, 0.5);

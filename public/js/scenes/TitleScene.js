@@ -134,12 +134,12 @@ class TitleScene extends Phaser.Scene {
     }, LEGO_COLORS.BLUE, 280);
 
     // Gamepad focus
-    GamepadManager.setFocusables([
-      { element: btnTogether, callback: () => {
+    InputSystem.setFocusables([
+      { element: btnTogether, x: cx, y: cy + 100, callback: () => {
         this.cameras.main.fadeOut(400, 10, 14, 23);
         this.time.delayedCall(400, () => this.scene.start('LobbyScene', { mode: 'multi' }));
       }},
-      { element: btnSolo, callback: () => {
+      { element: btnSolo, x: cx, y: cy + 155, callback: () => {
         this.cameras.main.fadeOut(400, 10, 14, 23);
         this.time.delayedCall(400, () => this.scene.start('LobbyScene', { mode: 'solo' }));
       }}

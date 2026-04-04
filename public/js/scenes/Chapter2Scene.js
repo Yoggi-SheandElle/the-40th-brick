@@ -35,6 +35,7 @@ class Chapter2Scene extends Phaser.Scene {
 
   startRoom(roomIndex) {
     this.currentRoom = roomIndex;
+    InputSystem.clearFocusables();
     if (this.roomContainer) this.roomContainer.destroy();
     this.roomContainer = this.add.container(0, 0);
 
@@ -195,6 +196,18 @@ class Chapter2Scene extends Phaser.Scene {
     submitBtn.on('pointerdown', () => this.checkTraps());
     this.roomContainer.add(submitBtn);
 
+    // Register focusables for controller navigation
+    const trapFocusables = [];
+    for (let i = 0; i < totalCells; i++) {
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      const x = gridStartX + col * (roomW + gap) + roomW / 2;
+      const y = gridStartY + row * (roomH + gap) + roomH / 2;
+      trapFocusables.push({ element: null, x, y, callback: () => {} });
+    }
+    trapFocusables.push({ element: submitBtn, x: cx, y: GAME_HEIGHT - 80, callback: () => this.checkTraps() });
+    InputSystem.setFocusables(trapFocusables);
+
     // Quote
     const quote = getRandomQuote('ideas');
     this.roomContainer.add(
@@ -289,6 +302,11 @@ class Chapter2Scene extends Phaser.Scene {
     trapBtn.setInteractive({ useHandCursor: true });
     trapBtn.on('pointerdown', () => this.checkTiming());
     this.roomContainer.add(trapBtn);
+
+    // Register focusables for controller navigation
+    InputSystem.setFocusables([
+      { element: trapBtn, x: cx, y: floorY + 80, callback: () => this.checkTiming() }
+    ]);
   }
 
   checkTiming() {
@@ -406,6 +424,23 @@ class Chapter2Scene extends Phaser.Scene {
       });
       this.roomContainer.add(btn);
     });
+
+    // Register focusables for controller navigation
+    const seqFocusables = trapTypes.map((trap, i) => {
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      const bx = cx - 130 + col * 130;
+      const by = btnY + row * 45;
+      return { element: null, x: bx, y: by, callback: () => {
+        this.playerSequence.push(trap);
+        this.sequenceDisplay.setText(this.playerSequence.map((t, j) => `${j + 1}. ${t}`).join('\n'));
+        network.sendPuzzleAction('trap_seq', { trap, index: this.playerSequence.length - 1 });
+        if (this.playerSequence.length === this.trapSequence.length) {
+          this.checkTrapSequence();
+        }
+      }};
+    });
+    InputSystem.setFocusables(seqFocusables);
   }
 
   checkTrapSequence() {
@@ -542,6 +577,18 @@ class Chapter2Scene extends Phaser.Scene {
     checkBtn.setInteractive({ useHandCursor: true });
     checkBtn.on('pointerdown', () => this.checkMaze());
     this.roomContainer.add(checkBtn);
+
+    // Register focusables for controller navigation
+    const mazeFocusables = [];
+    for (let i = 0; i < gridSize * gridSize; i++) {
+      const col = i % gridSize;
+      const row = Math.floor(i / gridSize);
+      const x = startX + col * cellW + (cellW - 4) / 2;
+      const y = startY + row * cellH + (cellH - 4) / 2;
+      mazeFocusables.push({ element: null, x, y, callback: () => {} });
+    }
+    mazeFocusables.push({ element: checkBtn, x: cx, y: GAME_HEIGHT - 80, callback: () => this.checkMaze() });
+    InputSystem.setFocusables(mazeFocusables);
   }
 
   checkMaze() {
@@ -662,6 +709,28 @@ class Chapter2Scene extends Phaser.Scene {
       });
       this.roomContainer.add(btn);
     });
+
+    // Register focusables for controller navigation
+    const patternFocusables = burglarTypes.map((b, idx) => {
+      const bx = cx - 130 + idx * 90;
+      const by = GAME_HEIGHT / 2 + 50;
+      return { element: null, x: bx, y: by, callback: () => {
+        if (idx === this.correctAnswer) {
+          const text = this.add.text(cx, by + 60, 'CORRECT!', {
+            fontFamily: '"Press Start 2P"', fontSize: '14px',
+            color: LEGO_COLORS.GREEN
+          }).setOrigin(0.5);
+          this.time.delayedCall(1000, () => { text.destroy(); this.nextRoom(); });
+        } else {
+          const text = this.add.text(cx, by + 60, 'WRONG!', {
+            fontFamily: '"Press Start 2P"', fontSize: '10px',
+            color: LEGO_COLORS.RED
+          }).setOrigin(0.5);
+          this.time.delayedCall(800, () => text.destroy());
+        }
+      }};
+    });
+    InputSystem.setFocusables(patternFocusables);
   }
 
   drawHouse() {

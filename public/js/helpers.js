@@ -82,11 +82,6 @@ const TEXT_STYLES = {
   }
 };
 
-// Check if in solo mode
-function isSolo() {
-  return network.solo === true;
-}
-
 // Draw futuristic grid background
 function drawGridBg(scene) {
   const gfx = scene.add.graphics();

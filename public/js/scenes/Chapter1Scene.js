@@ -39,6 +39,7 @@ class Chapter1Scene extends Phaser.Scene {
 
   startRoom(roomIndex) {
     this.currentRoom = roomIndex;
+    InputSystem.clearFocusables();
 
     // Clear previous room content
     if (this.roomContainer) this.roomContainer.destroy();
@@ -162,6 +163,15 @@ class Chapter1Scene extends Phaser.Scene {
     submitBtn.setInteractive({ useHandCursor: true });
     submitBtn.on('pointerdown', () => this.checkAnswer());
     this.roomContainer.add(submitBtn);
+
+    // Register focusables for controller navigation
+    const puzzleFocusables = [];
+    this.answerSlots.forEach((slot, i) => {
+      puzzleFocusables.push({ element: null, x: slot.x, y: 200, callback: () => this.cycleSlotColor(i, slot.x, slot.gfx) });
+    });
+    puzzleFocusables.push({ element: submitBtn, x: cx, y: cy + 150, callback: () => this.checkAnswer() });
+    InputSystem.setFocusables(puzzleFocusables);
+    SceneUI.showControllerPrompts(this);
 
     // Quote at bottom
     drawQuoteBox(this, this.roomContainer, 'friends');
@@ -304,6 +314,12 @@ class Chapter1Scene extends Phaser.Scene {
       brickBtns.push({ brick, hitArea, color });
     });
 
+    // Register focusables for controller navigation
+    const seqFocusables = brickBtns.map(b => ({
+      element: b.hitArea, x: b.hitArea.x, y: b.hitArea.y, callback: () => b.hitArea.emit('pointerdown')
+    }));
+    InputSystem.setFocusables(seqFocusables);
+
     // Play sequence animation
     this.showSequence = this.add.graphics();
     this.roomContainer.add(this.showSequence);
@@ -441,6 +457,12 @@ class Chapter1Scene extends Phaser.Scene {
 
       return { back, front, label, name, flipped: false, matched: false, hitArea };
     });
+
+    // Register focusables for controller navigation
+    const cardFocusables = this.cardObjects.map((card, i) => ({
+      element: card.hitArea, x: card.hitArea.x, y: card.hitArea.y, callback: () => this.flipCard(i)
+    }));
+    InputSystem.setFocusables(cardFocusables);
   }
 
   flipCard(index) {

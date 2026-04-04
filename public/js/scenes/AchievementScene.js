@@ -153,11 +153,17 @@ class AchievementScene extends Phaser.Scene {
         // Click or gamepad A
         this.input.once('pointerdown', () => this.proceed());
         GamepadManager.on('button_0', () => this.proceed());
+
+        // Register focusables for controller navigation
+        InputSystem.setFocusables([
+          { element: null, x: cx, y: GAME_HEIGHT - 50, callback: () => this.proceed() }
+        ]);
       });
     });
   }
 
   proceed() {
+    InputSystem.clearFocusables();
     this.cameras.main.fadeOut(400, 10, 14, 23);
     this.time.delayedCall(400, () => {
       this.scene.stop('AchievementScene');
