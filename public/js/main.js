@@ -2,6 +2,7 @@
 // Optimized for: 75" 4K TV, Steam Deck (1280x800), Mobile, PS4 controller
 
 const platform = detectPlatform();
+const DPR = Math.min(window.devicePixelRatio || 1, 3);
 
 const config = {
   type: Phaser.WEBGL,
@@ -27,7 +28,8 @@ const config = {
     pixelArt: false,
     antialias: true,
     antialiasGL: true,
-    roundPixels: true
+    roundPixels: false,
+    resolution: DPR
   },
   fps: {
     target: platform === 'mobile' ? 50 : 60,
