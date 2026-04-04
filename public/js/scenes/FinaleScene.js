@@ -128,6 +128,28 @@ class FinaleScene extends Phaser.Scene {
       }).setOrigin(0.5)
     );
 
+    // Timer - 10 seconds to answer
+    this.triviaTimer = 10;
+    this.triviaLocked = false;
+    const timerText = this.add.text(cx, 165, `Time: ${this.triviaTimer}`, {
+      fontFamily: '"Press Start 2P"', fontSize: '10px', color: LEGO_COLORS.YELLOW
+    }).setOrigin(0.5);
+    this.roomContainer.add(timerText);
+
+    const timerEvent = this.time.addEvent({
+      delay: 1000,
+      repeat: 9,
+      callback: () => {
+        this.triviaTimer--;
+        if (timerText) timerText.setText(`Time: ${this.triviaTimer}`);
+        if (this.triviaTimer <= 0 && !this.triviaLocked) {
+          this.triviaLocked = true;
+          this.showFeedback('TIME UP!', LEGO_COLORS.RED);
+          this.time.delayedCall(3000, () => { this.triviaLocked = false; this.triviaTimer = 10; timerEvent.reset({ delay: 1000, repeat: 9 }); });
+        }
+      }
+    });
+
     t.options.forEach((opt, i) => {
       const bx = cx + (i % 2 === 0 ? -130 : 130);
       const by = 220 + Math.floor(i / 2) * 70;
@@ -146,11 +168,15 @@ class FinaleScene extends Phaser.Scene {
       btn.setSize(220, 44);
       btn.setInteractive({ useHandCursor: true });
       btn.on('pointerdown', () => {
+        if (this.triviaLocked) return;
         network.sendPuzzleAction('trivia_answer', { answer: i });
         if (i === t.correct) {
+          this.triviaLocked = true;
           this.showFeedback('CORRECT!', LEGO_COLORS.GREEN, () => this.nextRoom());
         } else {
-          this.showFeedback('NOPE!', LEGO_COLORS.RED);
+          this.triviaLocked = true;
+          this.showFeedback('NOPE! Wait 3s...', LEGO_COLORS.RED);
+          this.time.delayedCall(3000, () => { this.triviaLocked = false; });
         }
       });
       this.roomContainer.add(btn);
@@ -161,11 +187,15 @@ class FinaleScene extends Phaser.Scene {
       const bx = cx + (i % 2 === 0 ? -130 : 130);
       const by = 220 + Math.floor(i / 2) * 70;
       return { element: null, x: bx, y: by, callback: () => {
+        if (this.triviaLocked) return;
         network.sendPuzzleAction('trivia_answer', { answer: i });
         if (i === t.correct) {
+          this.triviaLocked = true;
           this.showFeedback('CORRECT!', LEGO_COLORS.GREEN, () => this.nextRoom());
         } else {
-          this.showFeedback('NOPE!', LEGO_COLORS.RED);
+          this.triviaLocked = true;
+          this.showFeedback('NOPE! Wait 3s...', LEGO_COLORS.RED);
+          this.time.delayedCall(3000, () => { this.triviaLocked = false; });
         }
       }};
     });
@@ -177,7 +207,7 @@ class FinaleScene extends Phaser.Scene {
     const cx = GAME_WIDTH / 2;
 
     this.roomContainer.add(
-      this.add.text(cx, 70, 'SPEED BUILD!\nClick bricks 1-8 in order!', {
+      this.add.text(cx, 70, 'SPEED BUILD!\nClick bricks 1-12 in order!', {
         fontFamily: '"Press Start 2P"',
         fontSize: '8px',
         color: LEGO_COLORS.YELLOW,
@@ -186,7 +216,7 @@ class FinaleScene extends Phaser.Scene {
       }).setOrigin(0.5)
     );
 
-    const numBricks = 8;
+    const numBricks = 12;
     const positions = [];
     for (let i = 0; i < numBricks; i++) {
       positions.push({
@@ -256,7 +286,7 @@ class FinaleScene extends Phaser.Scene {
     InputSystem.setFocusables(speedFocusables);
 
     // Timer
-    this.buildTimer = 15;
+    this.buildTimer = 10;
     this.timerText = this.add.text(cx, GAME_HEIGHT - 50, `Time: ${this.buildTimer}`, {
       fontFamily: '"Press Start 2P"',
       fontSize: '10px',
@@ -266,7 +296,7 @@ class FinaleScene extends Phaser.Scene {
 
     this.time.addEvent({
       delay: 1000,
-      repeat: 14,
+      repeat: 9,
       callback: () => {
         this.buildTimer--;
         if (this.timerText) this.timerText.setText(`Time: ${this.buildTimer}`);
@@ -287,15 +317,19 @@ class FinaleScene extends Phaser.Scene {
       'I always start with the color palette before anything else.',
       'The most important thing is making sure every stud is visible.',
       'I prefer working alone rather than in teams.',
-      'Technic bricks are my favorite element to use.'
+      'Technic bricks are my favorite element to use.',
+      'My designs always begin with the minifigure in mind.',
+      'The box art is what I design first, then work backwards.'
     ];
 
-    const options = [realQuote.text, fakeQuotes[Math.floor(Math.random() * fakeQuotes.length)]];
-    const correctIndex = 0;
+    // Shuffle fakes and pick 3
+    const shuffledFakes = [...fakeQuotes].sort(() => Math.random() - 0.5);
+    const options = [realQuote.text, shuffledFakes[0], shuffledFakes[1], shuffledFakes[2]];
 
-    // Shuffle
-    if (Math.random() > 0.5) {
-      options.reverse();
+    // Shuffle all options
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
     }
     const correctFinal = options.indexOf(realQuote.text);
 
@@ -307,28 +341,29 @@ class FinaleScene extends Phaser.Scene {
       }).setOrigin(0.5)
     );
 
+    const quoteColors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN, LEGO_COLORS.ORANGE];
     options.forEach((quote, i) => {
-      const by = 160 + i * 130;
+      const by = 120 + i * 95;
 
       const bg = this.add.graphics();
       bg.fillStyle(0x2A2A3E, 1);
-      bg.fillRoundedRect(60, by - 30, GAME_WIDTH - 120, 80, 8);
-      bg.lineStyle(2, i === 0 ? hexToInt(LEGO_COLORS.RED) : hexToInt(LEGO_COLORS.BLUE), 0.6);
-      bg.strokeRoundedRect(60, by - 30, GAME_WIDTH - 120, 80, 8);
+      bg.fillRoundedRect(60, by - 25, GAME_WIDTH - 120, 70, 8);
+      bg.lineStyle(2, hexToInt(quoteColors[i]), 0.6);
+      bg.strokeRoundedRect(60, by - 25, GAME_WIDTH - 120, 70, 8);
       this.roomContainer.add(bg);
 
       this.roomContainer.add(
-        this.add.text(80, by - 15, `${i + 1}.`, {
+        this.add.text(80, by - 10, `${i + 1}.`, {
           fontFamily: '"Press Start 2P"',
-          fontSize: '12px',
-          color: i === 0 ? LEGO_COLORS.RED : LEGO_COLORS.BLUE
+          fontSize: '10px',
+          color: quoteColors[i]
         })
       );
 
       this.roomContainer.add(
         this.add.text(cx, by + 5, `"${quote}"`, {
           fontFamily: '"Press Start 2P"',
-          fontSize: '9px',
+          fontSize: '8px',
           color: LEGO_COLORS.WHITE,
           wordWrap: { width: 500 },
           align: 'center',
@@ -336,7 +371,7 @@ class FinaleScene extends Phaser.Scene {
         }).setOrigin(0.5)
       );
 
-      const hitArea = this.add.rectangle(cx, by + 5, GAME_WIDTH - 120, 80, 0x000000, 0);
+      const hitArea = this.add.rectangle(cx, by + 5, GAME_WIDTH - 120, 70, 0x000000, 0);
       hitArea.setInteractive({ useHandCursor: true });
       hitArea.on('pointerdown', () => {
         network.sendPuzzleAction('quote_guess', { choice: i });
@@ -351,7 +386,7 @@ class FinaleScene extends Phaser.Scene {
 
     // Register focusables for controller navigation
     const quoteFocusables = options.map((quote, i) => {
-      const by = 160 + i * 130;
+      const by = 120 + i * 95;
       return { element: null, x: cx, y: by + 5, callback: () => {
         network.sendPuzzleAction('quote_guess', { choice: i });
         if (i === correctFinal) {
@@ -367,7 +402,7 @@ class FinaleScene extends Phaser.Scene {
   // PUZZLE: Count bricks
   createBrickCountPuzzle(roomIndex) {
     const cx = GAME_WIDTH / 2;
-    const targetCount = 5 + Math.floor(Math.random() * 10);
+    const targetCount = 10 + Math.floor(Math.random() * 11);
 
     this.roomContainer.add(
       this.add.text(cx, 70, 'How many bricks do you count?', {
@@ -377,24 +412,26 @@ class FinaleScene extends Phaser.Scene {
       }).setOrigin(0.5)
     );
 
-    // Scatter bricks
+    // Scatter bricks with overlapping for difficulty
     const colors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN,
-                    LEGO_COLORS.YELLOW, LEGO_COLORS.ORANGE];
+                    LEGO_COLORS.YELLOW, LEGO_COLORS.ORANGE, LEGO_COLORS.BRIGHT_PINK];
     for (let i = 0; i < targetCount; i++) {
-      const bx = 80 + Math.random() * (GAME_WIDTH - 160);
-      const by = 120 + Math.random() * 250;
+      const bx = 70 + Math.random() * (GAME_WIDTH - 140);
+      const by = 110 + Math.random() * 260;
       const color = colors[Math.floor(Math.random() * colors.length)];
+      const angle = (Math.random() - 0.5) * 30; // slight rotation for overlap confusion
 
       const brick = this.add.graphics();
-      brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
+      brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 0.85 + Math.random() * 0.15);
       brick.fillRoundedRect(bx - 15, by - 10, 30, 20, 3);
       brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).lighten(15).color, 1);
       brick.fillCircle(bx, by - 12, 4);
+      brick.setAngle(angle);
       this.roomContainer.add(brick);
     }
 
-    // Number buttons
-    const options = [targetCount - 2, targetCount, targetCount + 1, targetCount + 3]
+    // Number buttons - options are very close together (consecutive numbers)
+    const options = [targetCount - 1, targetCount, targetCount + 1, targetCount + 2]
       .sort(() => Math.random() - 0.5);
 
     options.forEach((num, i) => {

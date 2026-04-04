@@ -83,17 +83,17 @@ class Chapter2Scene extends Phaser.Scene {
       }).setOrigin(0.5)
     );
 
-    // Grid of rooms (3x3)
+    // Grid of rooms (4x4)
     const rooms = [];
-    const gridStartX = cx - 140;
-    const gridStartY = 110;
-    const roomW = 90;
-    const roomH = 70;
-    const gap = 5;
+    const gridStartX = cx - 155;
+    const gridStartY = 95;
+    const roomW = 75;
+    const roomH = 55;
+    const gap = 4;
 
-    // Randomly select 3 rooms that need traps (only host knows)
-    const totalCells = 9;
-    const trapCount = 3 + Math.floor(this.currentRoom / 3);
+    // Randomly select rooms that need traps (only host knows)
+    const totalCells = 16;
+    const trapCount = 4 + Math.floor(this.currentRoom / 2);
     this.trapPositions = [];
     while (this.trapPositions.length < Math.min(trapCount, totalCells)) {
       const pos = Math.floor(Math.random() * totalCells);
@@ -102,14 +102,15 @@ class Chapter2Scene extends Phaser.Scene {
     this.playerTraps = new Array(totalCells).fill(false);
 
     const roomNames = [
-      'Attic L', 'Attic R', 'Attic C',
-      'Bedroom', 'Bathroom', 'Study',
-      'Kitchen', 'Living Rm', 'Hallway'
+      'Attic L', 'Attic R', 'Attic C', 'Attic D',
+      'Bedroom', 'Bathroom', 'Study', 'Nursery',
+      'Kitchen', 'Living Rm', 'Hallway', 'Pantry',
+      'Basement', 'Garage', 'Laundry', 'Cellar'
     ];
 
     for (let i = 0; i < totalCells; i++) {
-      const col = i % 3;
-      const row = Math.floor(i / 3);
+      const col = i % 4;
+      const row = Math.floor(i / 4);
       const x = gridStartX + col * (roomW + gap);
       const y = gridStartY + row * (roomH + gap);
 
@@ -201,8 +202,8 @@ class Chapter2Scene extends Phaser.Scene {
     // Register focusables for controller navigation
     const trapFocusables = [];
     for (let i = 0; i < totalCells; i++) {
-      const col = i % 3;
-      const row = Math.floor(i / 3);
+      const col = i % 4;
+      const row = Math.floor(i / 4);
       const x = gridStartX + col * (roomW + gap) + roomW / 2;
       const y = gridStartY + row * (roomH + gap) + roomH / 2;
       trapFocusables.push({ element: null, x, y, callback: () => {} });
@@ -246,12 +247,12 @@ class Chapter2Scene extends Phaser.Scene {
     this.roomContainer.add(floorGfx);
 
     // Trap zone (red area)
-    const trapX = cx - 30 + (Math.random() - 0.5) * 200;
+    const trapX = cx - 20 + (Math.random() - 0.5) * 200;
     const trapZone = this.add.graphics();
     trapZone.fillStyle(hexToInt(LEGO_COLORS.RED), 0.3);
-    trapZone.fillRect(trapX, floorY - 50, 60, 50);
+    trapZone.fillRect(trapX, floorY - 50, 40, 50);
     trapZone.lineStyle(2, hexToInt(LEGO_COLORS.RED), 0.6);
-    trapZone.strokeRect(trapX, floorY - 50, 60, 50);
+    trapZone.strokeRect(trapX, floorY - 50, 40, 50);
     this.roomContainer.add(trapZone);
 
     this.roomContainer.add(
@@ -275,7 +276,7 @@ class Chapter2Scene extends Phaser.Scene {
     this.roomContainer.add(burglar);
 
     // Animate burglar walking
-    const speed = 2000 + Math.random() * 2000;
+    const speed = 1200 + Math.random() * 1200;
     this.tweens.add({
       targets: burglar,
       x: GAME_WIDTH - 30,
@@ -286,7 +287,7 @@ class Chapter2Scene extends Phaser.Scene {
 
     this.burglar = burglar;
     this.trapZoneX = trapX;
-    this.trapZoneW = 60;
+    this.trapZoneW = 40;
     this.timingSuccess = false;
 
     // Big TRAP button
@@ -343,7 +344,7 @@ class Chapter2Scene extends Phaser.Scene {
   // PUZZLE 3: Trap sequence - place traps in order before timer runs out
   createTrapSequencePuzzle() {
     const cx = GAME_WIDTH / 2;
-    const numTraps = 4 + Math.floor(this.currentRoom / 3);
+    const numTraps = 5 + Math.floor(this.currentRoom / 2);
     const trapTypes = ['Paint Can', 'Iron', 'Toy Car', 'Tarantula', 'Blowtorch', 'Feather'];
     const isHost = isSolo() || network.playerRole === 'host';
     const canInteract = isSolo() || network.playerRole === 'guest';
@@ -400,8 +401,8 @@ class Chapter2Scene extends Phaser.Scene {
 
     const btnY = GAME_HEIGHT / 2 + 40;
     trapTypes.forEach((trap, i) => {
-      const col = i % 3;
-      const row = Math.floor(i / 3);
+      const col = i % 4;
+      const row = Math.floor(i / 4);
       const bx = cx - 130 + col * 130;
       const by = btnY + row * 45;
 
@@ -431,8 +432,8 @@ class Chapter2Scene extends Phaser.Scene {
 
     // Register focusables for controller navigation
     const seqFocusables = trapTypes.map((trap, i) => {
-      const col = i % 3;
-      const row = Math.floor(i / 3);
+      const col = i % 4;
+      const row = Math.floor(i / 4);
       const bx = cx - 130 + col * 130;
       const by = btnY + row * 45;
       return { element: null, x: bx, y: by, callback: () => {
@@ -476,9 +477,9 @@ class Chapter2Scene extends Phaser.Scene {
     const isHost = isSolo() || network.playerRole === 'host';
     const canInteract = isSolo() || network.playerRole === 'guest';
 
-    const gridSize = 4;
-    const cellW = 60;
-    const cellH = 50;
+    const gridSize = 5;
+    const cellW = 50;
+    const cellH = 42;
     const startX = cx - (gridSize * cellW) / 2;
     const startY = 100;
 

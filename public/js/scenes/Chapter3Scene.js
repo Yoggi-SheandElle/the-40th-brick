@@ -80,8 +80,8 @@ class Chapter3Scene extends Phaser.Scene {
     const cx = GAME_WIDTH / 2;
     const isHost = isSolo() || network.playerRole === 'host';
     const canInteract = isSolo() || network.playerRole === 'guest';
-    const runes = ['\u16A0', '\u16A2', '\u16A6', '\u16B1', '\u16B7', '\u16C1', '\u16C7', '\u16D2'];
-    const numPairs = 3 + Math.floor(this.currentRoom / 3);
+    const runes = ['\u16A0', '\u16A2', '\u16A6', '\u16B1', '\u16B7', '\u16C1', '\u16C7', '\u16D2', '\u16DA', '\u16DE', '\u16E3', '\u16E7'];
+    const numPairs = 5 + Math.floor(this.currentRoom / 3);
     const selected = runes.slice(0, numPairs);
 
     // Generate matching pairs but shuffled separately for each player
@@ -223,7 +223,7 @@ class Chapter3Scene extends Phaser.Scene {
     // Safe zones (5 spots)
     this.safeZones = [];
     this.clickedZones = 0;
-    const totalZones = 5;
+    const totalZones = 8;
 
     for (let i = 0; i < totalZones; i++) {
       const zx = 100 + (GAME_WIDTH - 200) * (i / (totalZones - 1));
@@ -287,7 +287,7 @@ class Chapter3Scene extends Phaser.Scene {
       delay: 50,
       loop: true,
       callback: () => {
-        beamAngle += 0.03;
+        beamAngle += 0.06;
         beam.clear();
         beam.fillStyle(0xFF4400, 0.12);
         const bx = cx + Math.sin(beamAngle) * 350;
@@ -308,16 +308,19 @@ class Chapter3Scene extends Phaser.Scene {
       { title: 'Orc Tactics', color: LEGO_COLORS.GREEN },
       { title: 'Shadow Maps', color: LEGO_COLORS.BLUE },
       { title: 'Eye Manual', color: LEGO_COLORS.ORANGE },
-      { title: 'Mordor Law', color: LEGO_COLORS.GREY }
+      { title: 'Mordor Law', color: LEGO_COLORS.GREY },
+      { title: 'Fell Beast', color: LEGO_COLORS.DARK_RED },
+      { title: 'Palantir', color: LEGO_COLORS.BLUE }
     ];
 
     const correctBook = Math.floor(Math.random() * books.length);
 
-    // Generate clues (host sees them)
+    // Generate clues (host sees them) - more ambiguous
     const clues = [
-      `The book is NOT ${books[(correctBook + 1) % books.length].title}`,
-      `The book's color is ${books[correctBook].color === LEGO_COLORS.YELLOW ? 'warm' : books[correctBook].color === LEGO_COLORS.BLUE ? 'cool' : 'neutral'}`,
-      `It's ${correctBook < 3 ? 'on the top shelf' : 'on the bottom shelf'}`
+      `The book is NOT ${books[(correctBook + 1) % books.length].title} or ${books[(correctBook + 3) % books.length].title}`,
+      `The spine color is ${books[correctBook].color === LEGO_COLORS.YELLOW || books[correctBook].color === LEGO_COLORS.ORANGE ? 'warm-toned' : books[correctBook].color === LEGO_COLORS.BLUE || books[correctBook].color === LEGO_COLORS.GREEN ? 'cool-toned' : 'dark or neutral'}`,
+      `It's ${correctBook < 4 ? 'on the upper shelves' : 'on the lower shelves'}`,
+      `The title has ${books[correctBook].title.length > 8 ? 'more than 8' : '8 or fewer'} letters`
     ];
 
     this.roomContainer.add(
@@ -357,9 +360,9 @@ class Chapter3Scene extends Phaser.Scene {
     this.roomContainer.add(shelfGfx);
 
     books.forEach((book, i) => {
-      const col = i % 3;
-      const row = Math.floor(i / 3);
-      const bx = 160 + col * 120;
+      const col = i % 4;
+      const row = Math.floor(i / 4);
+      const bx = 110 + col * 110;
       const by = (row === 0 ? shelfY1 : shelfY2);
 
       const bookGfx = this.add.graphics();
@@ -394,9 +397,9 @@ class Chapter3Scene extends Phaser.Scene {
 
     // Register focusables for controller navigation
     const bookFocusables = books.map((book, i) => {
-      const col = i % 3;
-      const row = Math.floor(i / 3);
-      const bx = 160 + col * 120;
+      const col = i % 4;
+      const row = Math.floor(i / 4);
+      const bx = 110 + col * 110;
       const by = (row === 0 ? shelfY1 : shelfY2) + 35;
       return { element: null, x: bx, y: by, callback: () => {
         network.sendPuzzleAction('book_pick', { book: i });
@@ -428,10 +431,10 @@ class Chapter3Scene extends Phaser.Scene {
     const isHost = isSolo() || network.playerRole === 'host';
     const canInteract = isSolo() || network.playerRole === 'guest';
 
-    const sections = 4;
+    const sections = 5;
     const targetPositions = [];
     for (let i = 0; i < sections; i++) {
-      targetPositions.push(Math.floor(Math.random() * 4)); // 0-3 rotation states
+      targetPositions.push(Math.floor(Math.random() * 6)); // 0-5 rotation states
     }
     this.towerPositions = new Array(sections).fill(0);
 
@@ -449,16 +452,16 @@ class Chapter3Scene extends Phaser.Scene {
       }).setOrigin(0.5)
     );
 
-    const symbols = ['\u25B2', '\u25B6', '\u25BC', '\u25C0']; // arrows: up, right, down, left
+    const symbols = ['\u25B2', '\u25B6', '\u25BC', '\u25C0', '\u25C6', '\u2726']; // arrows + diamond + star
     this.towerSections = [];
 
     for (let i = 0; i < sections; i++) {
-      const y = 110 + i * 90;
+      const y = 95 + i * 72;
 
       // Target (host only)
       if (isHost) {
         this.roomContainer.add(
-          this.add.text(cx - 150, y + 20, `Section ${i + 1}: ${symbols[targetPositions[i]]}`, {
+          this.add.text(cx - 150, y + 15, `Section ${i + 1}: ${symbols[targetPositions[i]]}`, {
             fontFamily: '"Press Start 2P"',
             fontSize: '8px',
             color: LEGO_COLORS.YELLOW
@@ -469,18 +472,18 @@ class Chapter3Scene extends Phaser.Scene {
       // Tower section (rotatable)
       const sectionGfx = this.add.graphics();
       sectionGfx.fillStyle(0x2A1A1A, 1);
-      sectionGfx.fillRect(cx - 60, y, 120, 70);
+      sectionGfx.fillRect(cx - 60, y, 120, 55);
       sectionGfx.lineStyle(2, 0x4A2A2A, 1);
-      sectionGfx.strokeRect(cx - 60, y, 120, 70);
+      sectionGfx.strokeRect(cx - 60, y, 120, 55);
       this.roomContainer.add(sectionGfx);
 
-      const arrow = this.add.text(cx, y + 35, symbols[0], {
-        fontSize: '24px',
+      const arrow = this.add.text(cx, y + 28, symbols[0], {
+        fontSize: '20px',
         color: LEGO_COLORS.ORANGE
       }).setOrigin(0.5);
       this.roomContainer.add(arrow);
 
-      const label = this.add.text(cx + 90, y + 35, `Section ${i + 1}`, {
+      const label = this.add.text(cx + 90, y + 28, `Section ${i + 1}`, {
         fontFamily: '"Press Start 2P"',
         fontSize: '9px',
         color: LEGO_COLORS.GREY
@@ -489,11 +492,11 @@ class Chapter3Scene extends Phaser.Scene {
 
       // Rotate button
       if (canInteract) {
-        const hitArea = this.add.rectangle(cx, y + 35, 120, 70, 0x000000, 0);
+        const hitArea = this.add.rectangle(cx, y + 28, 120, 55, 0x000000, 0);
         hitArea.setInteractive({ useHandCursor: true });
         const secIdx = i;
         hitArea.on('pointerdown', () => {
-          this.towerPositions[secIdx] = (this.towerPositions[secIdx] + 1) % 4;
+          this.towerPositions[secIdx] = (this.towerPositions[secIdx] + 1) % 6;
           arrow.setText(symbols[this.towerPositions[secIdx]]);
           network.sendPuzzleAction('tower_rotate', {
             section: secIdx,
@@ -522,10 +525,10 @@ class Chapter3Scene extends Phaser.Scene {
     // Register focusables for controller navigation
     const towerFocusables = [];
     for (let i = 0; i < sections; i++) {
-      const y = 110 + i * 90 + 35;
+      const y = 95 + i * 72 + 28;
       towerFocusables.push({ element: null, x: cx, y, callback: () => {
-        this.towerPositions[i] = (this.towerPositions[i] + 1) % 4;
-        const symbols = ['\u25B2', '\u25B6', '\u25BC', '\u25C0'];
+        this.towerPositions[i] = (this.towerPositions[i] + 1) % 6;
+        const symbols = ['\u25B2', '\u25B6', '\u25BC', '\u25C0', '\u25C6', '\u2726'];
         this.towerSections[i].arrow.setText(symbols[this.towerPositions[i]]);
         network.sendPuzzleAction('tower_rotate', { section: i, position: this.towerPositions[i] });
       }});
@@ -537,8 +540,8 @@ class Chapter3Scene extends Phaser.Scene {
   // PUZZLE 5: Ring puzzle - pass the ring through a sequence of holders
   createRingPuzzle() {
     const cx = GAME_WIDTH / 2;
-    const characters = ['Frodo', 'Sam', 'Gollum', 'Gandalf', 'Aragorn'];
-    const correctOrder = ['Gandalf', 'Frodo', 'Sam', 'Gollum'];
+    const characters = ['Frodo', 'Sam', 'Gollum', 'Gandalf', 'Aragorn', 'Legolas', 'Gimli'];
+    const correctOrder = ['Gandalf', 'Frodo', 'Aragorn', 'Sam', 'Gollum'];
     const isHost = isSolo() || network.playerRole === 'host';
     const canInteract = isSolo() || network.playerRole === 'guest';
 
@@ -659,7 +662,7 @@ class Chapter3Scene extends Phaser.Scene {
     }
     if (data.action === 'tower_rotate' && this.towerSections) {
       const { section, position } = data.payload;
-      const symbols = ['\u25B2', '\u25B6', '\u25BC', '\u25C0'];
+      const symbols = ['\u25B2', '\u25B6', '\u25BC', '\u25C0', '\u25C6', '\u2726'];
       if (this.towerSections[section]) {
         this.towerPositions[section] = position;
         this.towerSections[section].arrow.setText(symbols[position]);

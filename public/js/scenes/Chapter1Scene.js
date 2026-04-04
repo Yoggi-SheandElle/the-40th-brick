@@ -75,8 +75,9 @@ class Chapter1Scene extends Phaser.Scene {
 
     // Generate target colors (3-6 bricks to color)
     const brickColors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN,
-                          LEGO_COLORS.YELLOW, LEGO_COLORS.ORANGE, LEGO_COLORS.BRIGHT_PINK];
-    const numBricks = 3 + Math.floor(this.currentRoom / 3);
+                          LEGO_COLORS.YELLOW, LEGO_COLORS.ORANGE, LEGO_COLORS.BRIGHT_PINK,
+                          LEGO_COLORS.MEDIUM_LAVENDER, LEGO_COLORS.SAND_GREEN, LEGO_COLORS.TAN];
+    const numBricks = 4 + Math.floor(this.currentRoom / 2);
     const target = [];
     for (let i = 0; i < numBricks; i++) {
       target.push(brickColors[Math.floor(Math.random() * brickColors.length)]);
@@ -104,6 +105,7 @@ class Chapter1Scene extends Phaser.Scene {
         this.add.text(cx, 100, 'TARGET:', TEXT_STYLES.label).setOrigin(0.5)
       );
 
+      const targetBricks = [];
       target.forEach((color, i) => {
         const bx = cx - ((numBricks - 1) * 35) / 2 + i * 35;
         const brick = this.add.graphics();
@@ -113,7 +115,19 @@ class Chapter1Scene extends Phaser.Scene {
         brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).lighten(15).color, 1);
         brick.fillCircle(bx, 113, 5);
         this.roomContainer.add(brick);
+        targetBricks.push(brick);
       });
+
+      // In rooms 5+, hide the target after 3 seconds (player must memorize)
+      if (this.currentRoom >= 5) {
+        this.time.delayedCall(3000, () => {
+          targetBricks.forEach(b => b.setVisible(false));
+          const hiddenMsg = this.add.text(cx, 125, 'MEMORIZE!', {
+            fontFamily: '"Press Start 2P"', fontSize: '8px', color: LEGO_COLORS.RED
+          }).setOrigin(0.5);
+          this.roomContainer.add(hiddenMsg);
+        });
+      }
     }
 
     // Answer slots
@@ -179,7 +193,8 @@ class Chapter1Scene extends Phaser.Scene {
 
   cycleSlotColor(slotIndex, bx, slotGfx) {
     const colors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN,
-                    LEGO_COLORS.YELLOW, LEGO_COLORS.ORANGE, LEGO_COLORS.BRIGHT_PINK];
+                    LEGO_COLORS.YELLOW, LEGO_COLORS.ORANGE, LEGO_COLORS.BRIGHT_PINK,
+                    LEGO_COLORS.MEDIUM_LAVENDER, LEGO_COLORS.SAND_GREEN, LEGO_COLORS.TAN];
     const slot = this.answerSlots[slotIndex];
     slot.colorIndex = (slot.colorIndex + 1) % colors.length;
     const color = colors[slot.colorIndex];
@@ -262,7 +277,7 @@ class Chapter1Scene extends Phaser.Scene {
   createPatternPuzzle() {
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
-    const gridSize = 3 + Math.floor(this.currentRoom / 4);
+    const gridSize = 4 + Math.floor(this.currentRoom / 4);
     const colors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN, LEGO_COLORS.YELLOW];
 
     // Generate target pattern
@@ -383,7 +398,7 @@ class Chapter1Scene extends Phaser.Scene {
   createSequencePuzzle() {
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
-    const seqLength = 3 + Math.floor(this.currentRoom / 2);
+    const seqLength = 5 + Math.floor(this.currentRoom / 2);
     const colors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN, LEGO_COLORS.YELLOW];
 
     // Generate sequence
@@ -461,8 +476,8 @@ class Chapter1Scene extends Phaser.Scene {
     this.tweens.add({
       targets: flash,
       alpha: 0,
-      delay: 500,
-      duration: 300,
+      delay: 300,
+      duration: 200,
       onComplete: () => {
         flash.destroy();
         this.playSequenceAnimation(index + 1);
@@ -505,7 +520,7 @@ class Chapter1Scene extends Phaser.Scene {
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
     const cols = 4;
-    const rows = 2;
+    const rows = 3;
     const cardW = 65;
     const cardH = 75;
     const gap = 10;
@@ -626,7 +641,7 @@ class Chapter1Scene extends Phaser.Scene {
   createBrickBuildPuzzle() {
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
-    const numBricks = 4 + Math.floor(this.currentRoom / 3);
+    const numBricks = 6 + Math.floor(this.currentRoom / 2);
     const colors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN, LEGO_COLORS.YELLOW, LEGO_COLORS.ORANGE, LEGO_COLORS.BRIGHT_PINK];
 
     // Generate correct order
