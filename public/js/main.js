@@ -1,13 +1,12 @@
 // The 40th Brick - Main Game Entry
 // Optimized for: 75" 4K TV, Steam Deck (1280x800), Mobile, PS4 controller
 
-const DPR = window.devicePixelRatio || 1;
 const platform = detectPlatform();
 
 const config = {
   type: Phaser.WEBGL,
-  width: GAME_WIDTH * Math.min(DPR, 2),
-  height: GAME_HEIGHT * Math.min(DPR, 2),
+  width: GAME_WIDTH,
+  height: GAME_HEIGHT,
   parent: 'game-container',
   backgroundColor: '#0A0E17',
   dom: {
@@ -55,18 +54,6 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
-
-// Scale cameras to DPR for crisp rendering on high-res displays
-const zoomFactor = Math.min(DPR, 2);
-if (zoomFactor > 1) {
-  game.events.on('ready', () => {
-    game.scene.scenes.forEach(scene => {
-      scene.events.on('create', () => {
-        scene.cameras.main.setZoom(zoomFactor);
-      });
-    });
-  });
-}
 
 // Handle resize and orientation
 window.addEventListener('resize', () => {
