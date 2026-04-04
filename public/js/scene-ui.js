@@ -153,52 +153,167 @@ const SceneUI = {
 
   // Premium room header with chapter badge + room counter
   createRoomHeader(scene, chapterNum, chapterTitle, roomTitle, roomNum, totalRooms) {
-    // Chapter badge (top-left)
-    const badgeBg = scene.add.graphics();
-    badgeBg.fillStyle(0x131824, 0.7);
-    badgeBg.fillRoundedRect(12, 8, 160, 28, 6);
-    badgeBg.lineStyle(1, 0x00D4FF, 0.1);
-    badgeBg.strokeRoundedRect(12, 8, 160, 28, 6);
+    // Full-width header bar background
+    const headerBg = scene.add.graphics().setDepth(50);
+    headerBg.fillStyle(0x0A0E17, 0.95);
+    headerBg.fillRect(0, 0, GAME_WIDTH, 46);
 
-    scene.add.text(20, 22, 'CH.' + chapterNum, {
+    // Chapter badge (top-left)
+    const badgeBg = scene.add.graphics().setDepth(51);
+    badgeBg.fillStyle(0x131824, 0.9);
+    badgeBg.fillRoundedRect(8, 6, 80, 32, 6);
+    badgeBg.lineStyle(1, 0x00D4FF, 0.15);
+    badgeBg.strokeRoundedRect(8, 6, 80, 32, 6);
+
+    scene.add.text(48, 22, 'CH.' + chapterNum, {
       fontFamily: FONT_MONO,
-      fontSize: '11px',
+      fontSize: '12px',
       fontStyle: 'bold',
       color: LEGO_COLORS.CYAN,
-      letterSpacing: 1
-    }).setOrigin(0, 0.5);
+      letterSpacing: 2
+    }).setOrigin(0.5).setDepth(52);
 
-    scene.add.text(65, 22, chapterTitle, {
-      fontFamily: FONT_BODY,
-      fontSize: '14px',
-      color: '#8896AA'
-    }).setOrigin(0, 0.5);
-
-    // Room title (center)
-    scene.add.text(GAME_WIDTH / 2, 22, roomTitle, {
+    // Room title (center - prominent)
+    scene.add.text(GAME_WIDTH / 2, 22, roomTitle.toUpperCase(), {
       fontFamily: FONT_TITLE,
-      fontSize: '18px',
+      fontSize: '16px',
       fontStyle: 'bold',
-      color: LEGO_COLORS.YELLOW
-    }).setOrigin(0.5);
+      color: LEGO_COLORS.YELLOW,
+      stroke: '#0A0E17',
+      strokeThickness: 2
+    }).setOrigin(0.5).setDepth(52);
 
     // Room progress (top-right)
-    const progBg = scene.add.graphics();
-    progBg.fillStyle(0x131824, 0.7);
-    progBg.fillRoundedRect(GAME_WIDTH - 120, 8, 108, 28, 6);
-    progBg.lineStyle(1, 0x00D4FF, 0.1);
-    progBg.strokeRoundedRect(GAME_WIDTH - 120, 8, 108, 28, 6);
+    const progBg = scene.add.graphics().setDepth(51);
+    progBg.fillStyle(0x131824, 0.9);
+    progBg.fillRoundedRect(GAME_WIDTH - 108, 6, 100, 32, 6);
+    progBg.lineStyle(1, 0x00D4FF, 0.15);
+    progBg.strokeRoundedRect(GAME_WIDTH - 108, 6, 100, 32, 6);
 
-    scene.add.text(GAME_WIDTH - 50, 22, 'Room ' + roomNum + '/' + totalRooms, {
+    scene.add.text(GAME_WIDTH - 58, 22, roomNum + '/' + totalRooms, {
       fontFamily: FONT_MONO,
-      fontSize: '11px',
+      fontSize: '12px',
+      fontStyle: 'bold',
       color: LEGO_COLORS.GREY
-    }).setOrigin(1, 0.5);
+    }).setOrigin(0.5).setDepth(52);
 
-    // Top border glow
-    const topLine = scene.add.graphics();
-    topLine.lineStyle(1, 0x00D4FF, 0.08);
-    topLine.lineBetween(0, 42, GAME_WIDTH, 42);
+    // Hint button (next to pause)
+    const hintBtn = scene.add.text(GAME_WIDTH - 140, 22, '?', {
+      fontFamily: FONT_TITLE,
+      fontSize: '16px',
+      fontStyle: 'bold',
+      color: '#4A5A6A'
+    }).setOrigin(0.5).setDepth(52).setInteractive({ useHandCursor: true });
+    hintBtn.on('pointerover', () => hintBtn.setColor(LEGO_COLORS.YELLOW));
+    hintBtn.on('pointerout', () => hintBtn.setColor('#4A5A6A'));
+    hintBtn.on('pointerdown', () => SceneUI.showHint(scene, chapterNum, roomNum));
+
+    // Bottom glow line
+    const topLine = scene.add.graphics().setDepth(51);
+    topLine.lineStyle(1, 0x00D4FF, 0.12);
+    topLine.lineBetween(0, 44, GAME_WIDTH, 44);
+  },
+
+  // Hint system - vague clues to nudge the player
+  showHint(scene, chapter, room) {
+    if (scene._hintOverlay) return;
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
+
+    SaveManager.useHint();
+
+    const hints = {
+      1: [
+        'Look carefully at the colors. They cycle in a fixed order.',
+        'Patterns repeat. Focus on one row at a time.',
+        'Watch the rhythm. Each flash is a clue.',
+        'Some pairs hide in plain sight. Try the corners first.',
+        'The order matters more than the colors.',
+        'Memorize the top row first, then work down.',
+        'Count the unique colors. That narrows it down.',
+        'The first and last positions are often the same.',
+        'Try matching from left to right.',
+        'Almost there. Trust your instincts.'
+      ],
+      2: [
+        'Burglars always enter from the edges.',
+        'Watch the timing. The red zone has a rhythm.',
+        'Some rooms are decoys. Focus on the path.',
+        'The sequence follows a pattern. Look for repeats.',
+        'Not every door needs to be open.',
+        'Corners are safe spots. Start there.',
+        'The shortest path is not always the safest.',
+        'Count the steps before you commit.',
+        'Speed matters less than accuracy.',
+        'Kevin always has a backup plan.'
+      ],
+      3: [
+        'The runes mirror each other. Look for symmetry.',
+        'Move before the beam reaches you.',
+        'Not every book tells the truth. Read the clues twice.',
+        'Each rotation has six faces now. Count carefully.',
+        'The Ring has a will of its own. Follow the lore.',
+        'Ancient symbols have patterns. Compare the shapes.',
+        'The Eye sweeps in arcs. Predict its path.',
+        'Colors can be warm, cool, or neutral. Think about it.',
+        'The tower aligns when all arrows point the same direction.',
+        'Some characters refuse the Ring. That narrows the order.'
+      ],
+      4: [
+        'You know this one. Think about what Ante would say.',
+        'Speed over perfection. Just go in order.',
+        'Her words have a distinct style. Listen for the passion.',
+        'Count methodically. Row by row.',
+        'The journey is almost over. Every brick counts.',
+        'Memories are the key. What year was it?',
+        'Think Billund. Think Croatia. Think home.',
+        'The final brick completes the wall.',
+        'Trust what you know about her work.',
+        'This is your story. You know the answer.'
+      ]
+    };
+
+    const chapterHints = hints[chapter] || hints[1];
+    const hintIndex = Math.min(room - 1, chapterHints.length - 1);
+    const hintText = chapterHints[hintIndex];
+
+    const overlay = scene.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.6).setDepth(350);
+    overlay.setInteractive();
+
+    const panel = scene.add.graphics().setDepth(351);
+    panel.fillStyle(0x131824, 0.95);
+    panel.fillRoundedRect(cx - 200, cy - 60, 400, 120, 10);
+    panel.lineStyle(1, hexToInt(LEGO_COLORS.YELLOW), 0.3);
+    panel.strokeRoundedRect(cx - 200, cy - 60, 400, 120, 10);
+
+    const label = scene.add.text(cx, cy - 35, 'HINT', {
+      fontFamily: FONT_MONO, fontSize: '10px', fontStyle: 'bold',
+      color: LEGO_COLORS.YELLOW, letterSpacing: 3
+    }).setOrigin(0.5).setDepth(352);
+
+    const hint = scene.add.text(cx, cy + 5, hintText, {
+      fontFamily: FONT_BODY, fontSize: '14px', color: '#D0D8E8',
+      wordWrap: { width: 360 }, align: 'center', lineSpacing: 4
+    }).setOrigin(0.5).setDepth(352);
+
+    const dismiss = scene.add.text(cx, cy + 45, 'TAP TO CLOSE', {
+      fontFamily: FONT_MONO, fontSize: '9px', color: '#5A6A7A'
+    }).setOrigin(0.5).setDepth(352);
+
+    scene._hintOverlay = { overlay, panel, label, hint, dismiss };
+
+    overlay.on('pointerdown', () => {
+      overlay.destroy(); panel.destroy(); label.destroy(); hint.destroy(); dismiss.destroy();
+      scene._hintOverlay = null;
+    });
+
+    // Auto-dismiss after 5 seconds
+    scene.time.delayedCall(5000, () => {
+      if (scene._hintOverlay) {
+        overlay.destroy(); panel.destroy(); label.destroy(); hint.destroy(); dismiss.destroy();
+        scene._hintOverlay = null;
+      }
+    });
   },
 
   // Premium brick-style action button
