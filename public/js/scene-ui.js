@@ -152,11 +152,15 @@ const SceneUI = {
   },
 
   // Premium room header with chapter badge + room counter
+  // All elements added to scene.roomContainer so they get cleaned up between rooms
   createRoomHeader(scene, chapterNum, chapterTitle, roomTitle, roomNum, totalRooms) {
+    const c = scene.roomContainer;
+
     // Full-width header bar background
     const headerBg = scene.add.graphics().setDepth(50);
     headerBg.fillStyle(0x0A0E17, 0.95);
     headerBg.fillRect(0, 0, GAME_WIDTH, 46);
+    c.add(headerBg);
 
     // Chapter badge (top-left)
     const badgeBg = scene.add.graphics().setDepth(51);
@@ -164,17 +168,19 @@ const SceneUI = {
     badgeBg.fillRoundedRect(8, 6, 80, 32, 6);
     badgeBg.lineStyle(1, 0x00D4FF, 0.15);
     badgeBg.strokeRoundedRect(8, 6, 80, 32, 6);
+    c.add(badgeBg);
 
-    scene.add.text(48, 22, 'CH.' + chapterNum, {
+    const chLabel = scene.add.text(48, 22, 'CH.' + chapterNum, {
       fontFamily: FONT_MONO,
       fontSize: '12px',
       fontStyle: 'bold',
       color: LEGO_COLORS.CYAN,
       letterSpacing: 2
     }).setOrigin(0.5).setDepth(52);
+    c.add(chLabel);
 
     // Room title (center - prominent)
-    scene.add.text(GAME_WIDTH / 2, 22, roomTitle.toUpperCase(), {
+    const titleText = scene.add.text(GAME_WIDTH / 2, 22, roomTitle.toUpperCase(), {
       fontFamily: FONT_TITLE,
       fontSize: '16px',
       fontStyle: 'bold',
@@ -182,6 +188,7 @@ const SceneUI = {
       stroke: '#0A0E17',
       strokeThickness: 2
     }).setOrigin(0.5).setDepth(52);
+    c.add(titleText);
 
     // Room progress (top-right)
     const progBg = scene.add.graphics().setDepth(51);
@@ -189,15 +196,17 @@ const SceneUI = {
     progBg.fillRoundedRect(GAME_WIDTH - 108, 6, 100, 32, 6);
     progBg.lineStyle(1, 0x00D4FF, 0.15);
     progBg.strokeRoundedRect(GAME_WIDTH - 108, 6, 100, 32, 6);
+    c.add(progBg);
 
-    scene.add.text(GAME_WIDTH - 58, 22, roomNum + '/' + totalRooms, {
+    const progText = scene.add.text(GAME_WIDTH - 58, 22, roomNum + '/' + totalRooms, {
       fontFamily: FONT_MONO,
       fontSize: '12px',
       fontStyle: 'bold',
       color: LEGO_COLORS.GREY
     }).setOrigin(0.5).setDepth(52);
+    c.add(progText);
 
-    // Hint button (next to pause)
+    // Hint button
     const hintBtn = scene.add.text(GAME_WIDTH - 140, 22, '?', {
       fontFamily: FONT_TITLE,
       fontSize: '16px',
@@ -207,11 +216,13 @@ const SceneUI = {
     hintBtn.on('pointerover', () => hintBtn.setColor(LEGO_COLORS.YELLOW));
     hintBtn.on('pointerout', () => hintBtn.setColor('#4A5A6A'));
     hintBtn.on('pointerdown', () => SceneUI.showHint(scene, chapterNum, roomNum));
+    c.add(hintBtn);
 
     // Bottom glow line
     const topLine = scene.add.graphics().setDepth(51);
     topLine.lineStyle(1, 0x00D4FF, 0.12);
     topLine.lineBetween(0, 44, GAME_WIDTH, 44);
+    c.add(topLine);
   },
 
   // Hint system - vague clues to nudge the player
