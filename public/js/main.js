@@ -1,8 +1,12 @@
 // The 40th Brick - Main Game Entry
+// Render at native screen resolution for crisp text on 4K TVs and high-DPI screens
+// Game logic stays at 960x540, Phaser scales the canvas to fill the screen
+const DPR = window.devicePixelRatio || 1;
+
 const config = {
-  type: Phaser.AUTO,
-  width: GAME_WIDTH,
-  height: GAME_HEIGHT,
+  type: Phaser.WEBGL,
+  width: GAME_WIDTH * DPR,
+  height: GAME_HEIGHT * DPR,
   parent: 'game-container',
   backgroundColor: '#0A0E17',
   dom: {
@@ -17,9 +21,7 @@ const config = {
   },
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-    min: { width: 480, height: 270 },
-    max: { width: 1920, height: 1080 }
+    autoCenter: Phaser.Scale.CENTER_BOTH
   },
   render: {
     pixelArt: false,
@@ -49,7 +51,19 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-// Handle orientation changes and DPI
+// Scale all cameras to match the DPR so game coordinates stay at 960x540
+game.events.on('ready', () => {
+  game.scale.refresh();
+  if (DPR > 1) {
+    game.scene.scenes.forEach(scene => {
+      scene.events.on('create', () => {
+        scene.cameras.main.setZoom(DPR);
+      });
+    });
+  }
+});
+
+// Handle orientation changes
 window.addEventListener('resize', () => {
   game.scale.refresh();
 });

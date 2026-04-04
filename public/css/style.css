@@ -31,6 +31,8 @@ body {
 
 #game-container canvas {
   display: block;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 /* Prevent iOS bounce scrolling */
