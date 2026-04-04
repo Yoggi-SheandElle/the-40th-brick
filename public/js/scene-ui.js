@@ -26,8 +26,129 @@ const SceneUI = {
       });
     }
 
+    // Pause button (top-right corner, always visible)
+    SceneUI.addPauseButton(scene);
+
     // Fade in
     scene.cameras.main.fadeIn(400, 10, 14, 23);
+  },
+
+  // Pause overlay with resume / quit options
+  addPauseButton(scene) {
+    const pauseBtn = scene.add.text(GAME_WIDTH - 20, 22, '\u2759\u2759', {
+      fontFamily: FONT_MONO,
+      fontSize: '14px',
+      color: '#6A7A8A'
+    }).setOrigin(1, 0.5).setDepth(300).setInteractive({ useHandCursor: true });
+
+    pauseBtn.on('pointerover', () => pauseBtn.setColor(LEGO_COLORS.YELLOW));
+    pauseBtn.on('pointerout', () => pauseBtn.setColor('#6A7A8A'));
+    pauseBtn.on('pointerdown', () => SceneUI.showPauseMenu(scene));
+
+    // Escape key also opens pause
+    scene.input.keyboard.on('keydown-ESC', () => {
+      if (!scene._pauseOverlay) SceneUI.showPauseMenu(scene);
+      else SceneUI.hidePauseMenu(scene);
+    });
+
+    // B button (Circle) on controller opens pause when no focusables active
+    InputSystem.on('cancel', () => {
+      if (!scene._pauseOverlay && scene.scene.isActive()) {
+        SceneUI.showPauseMenu(scene);
+      } else if (scene._pauseOverlay) {
+        SceneUI.hidePauseMenu(scene);
+      }
+    });
+  },
+
+  showPauseMenu(scene) {
+    if (scene._pauseOverlay) return;
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
+
+    // Dim overlay
+    const overlay = scene.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.75).setDepth(400);
+    overlay.setInteractive(); // block clicks through
+
+    // Panel
+    const panel = scene.add.graphics().setDepth(401);
+    panel.fillStyle(0x131824, 0.95);
+    panel.fillRoundedRect(cx - 160, cy - 120, 320, 240, 12);
+    panel.lineStyle(1, 0x00D4FF, 0.2);
+    panel.strokeRoundedRect(cx - 160, cy - 120, 320, 240, 12);
+
+    const title = scene.add.text(cx, cy - 85, 'PAUSED', {
+      fontFamily: FONT_TITLE,
+      fontSize: '22px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.YELLOW
+    }).setOrigin(0.5).setDepth(402);
+
+    // Resume button
+    const resumeBtn = scene.add.container(cx, cy - 20).setDepth(402);
+    const resumeBg = scene.add.graphics();
+    resumeBg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 0.8);
+    resumeBg.fillRoundedRect(-100, -20, 200, 40, 6);
+    const resumeLbl = scene.add.text(0, 0, 'RESUME', {
+      fontFamily: FONT_TITLE, fontSize: '14px', fontStyle: 'bold', color: '#FFFFFF'
+    }).setOrigin(0.5);
+    resumeBtn.add([resumeBg, resumeLbl]);
+    resumeBtn.setSize(200, 40).setInteractive({ useHandCursor: true });
+    resumeBtn.on('pointerdown', () => SceneUI.hidePauseMenu(scene));
+
+    // World Map button
+    const mapBtn = scene.add.container(cx, cy + 40).setDepth(402);
+    const mapBg = scene.add.graphics();
+    mapBg.fillStyle(hexToInt(LEGO_COLORS.BLUE), 0.8);
+    mapBg.fillRoundedRect(-100, -20, 200, 40, 6);
+    const mapLbl = scene.add.text(0, 0, 'WORLD MAP', {
+      fontFamily: FONT_TITLE, fontSize: '14px', fontStyle: 'bold', color: '#FFFFFF'
+    }).setOrigin(0.5);
+    mapBtn.add([mapBg, mapLbl]);
+    mapBtn.setSize(200, 40).setInteractive({ useHandCursor: true });
+    mapBtn.on('pointerdown', () => {
+      SceneUI.hidePauseMenu(scene);
+      scene.cameras.main.fadeOut(300, 10, 14, 23);
+      scene.time.delayedCall(300, () => scene.scene.start('WorldMapScene'));
+    });
+
+    // Main Menu button
+    const menuBtn = scene.add.container(cx, cy + 100).setDepth(402);
+    const menuBg = scene.add.graphics();
+    menuBg.fillStyle(hexToInt(LEGO_COLORS.RED), 0.8);
+    menuBg.fillRoundedRect(-100, -20, 200, 40, 6);
+    const menuLbl = scene.add.text(0, 0, 'MAIN MENU', {
+      fontFamily: FONT_TITLE, fontSize: '14px', fontStyle: 'bold', color: '#FFFFFF'
+    }).setOrigin(0.5);
+    menuBtn.add([menuBg, menuLbl]);
+    menuBtn.setSize(200, 40).setInteractive({ useHandCursor: true });
+    menuBtn.on('pointerdown', () => {
+      SceneUI.hidePauseMenu(scene);
+      scene.cameras.main.fadeOut(300, 10, 14, 23);
+      scene.time.delayedCall(300, () => scene.scene.start('TitleScene'));
+    });
+
+    scene._pauseOverlay = { overlay, panel, title, resumeBtn, mapBtn, menuBtn };
+
+    // Controller focusables for pause menu
+    InputSystem.setFocusables([
+      { element: resumeBtn, x: cx, y: cy - 20, callback: () => SceneUI.hidePauseMenu(scene) },
+      { element: mapBtn, x: cx, y: cy + 40, callback: () => { SceneUI.hidePauseMenu(scene); scene.cameras.main.fadeOut(300, 10, 14, 23); scene.time.delayedCall(300, () => scene.scene.start('WorldMapScene')); }},
+      { element: menuBtn, x: cx, y: cy + 100, callback: () => { SceneUI.hidePauseMenu(scene); scene.cameras.main.fadeOut(300, 10, 14, 23); scene.time.delayedCall(300, () => scene.scene.start('TitleScene')); }}
+    ]);
+  },
+
+  hidePauseMenu(scene) {
+    if (!scene._pauseOverlay) return;
+    const p = scene._pauseOverlay;
+    p.overlay.destroy();
+    p.panel.destroy();
+    p.title.destroy();
+    p.resumeBtn.destroy();
+    p.mapBtn.destroy();
+    p.menuBtn.destroy();
+    scene._pauseOverlay = null;
+    InputSystem.clearFocusables();
   },
 
   // Premium room header with chapter badge + room counter
@@ -41,22 +162,22 @@ const SceneUI = {
 
     scene.add.text(20, 22, 'CH.' + chapterNum, {
       fontFamily: FONT_MONO,
-      fontSize: '9px',
+      fontSize: '11px',
       fontStyle: 'bold',
       color: LEGO_COLORS.CYAN,
       letterSpacing: 1
     }).setOrigin(0, 0.5);
 
-    scene.add.text(60, 22, chapterTitle, {
+    scene.add.text(65, 22, chapterTitle, {
       fontFamily: FONT_BODY,
-      fontSize: '12px',
+      fontSize: '14px',
       color: '#8896AA'
     }).setOrigin(0, 0.5);
 
     // Room title (center)
     scene.add.text(GAME_WIDTH / 2, 22, roomTitle, {
       fontFamily: FONT_TITLE,
-      fontSize: '14px',
+      fontSize: '18px',
       fontStyle: 'bold',
       color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5);
@@ -68,9 +189,9 @@ const SceneUI = {
     progBg.lineStyle(1, 0x00D4FF, 0.1);
     progBg.strokeRoundedRect(GAME_WIDTH - 120, 8, 108, 28, 6);
 
-    scene.add.text(GAME_WIDTH - 16, 22, 'Room ' + roomNum + '/' + totalRooms, {
+    scene.add.text(GAME_WIDTH - 50, 22, 'Room ' + roomNum + '/' + totalRooms, {
       fontFamily: FONT_MONO,
-      fontSize: '9px',
+      fontSize: '11px',
       color: LEGO_COLORS.GREY
     }).setOrigin(1, 0.5);
 

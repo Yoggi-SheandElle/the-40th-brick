@@ -16,7 +16,7 @@ const TEXT_STYLES = {
   },
   body: {
     fontFamily: FONT_BODY,
-    fontSize: '15px',
+    fontSize: '16px',
     color: '#D0D8E8',
     lineSpacing: 6,
     wordWrap: { width: 600 },
@@ -24,13 +24,13 @@ const TEXT_STYLES = {
   },
   small: {
     fontFamily: FONT_MONO,
-    fontSize: '10px',
+    fontSize: '11px',
     color: LEGO_COLORS.GREY,
     letterSpacing: 2
   },
   label: {
     fontFamily: FONT_MONO,
-    fontSize: '11px',
+    fontSize: '12px',
     fontStyle: 'bold',
     color: LEGO_COLORS.CYAN,
     letterSpacing: 1
