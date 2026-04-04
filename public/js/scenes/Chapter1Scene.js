@@ -123,7 +123,7 @@ class Chapter1Scene extends Phaser.Scene {
         this.time.delayedCall(3000, () => {
           targetBricks.forEach(b => b.setVisible(false));
           const hiddenMsg = this.add.text(cx, 125, 'MEMORIZE!', {
-            fontFamily: '"Press Start 2P"', fontSize: '8px', color: LEGO_COLORS.RED
+            fontFamily: '"Rajdhani"', fontSize: '22px', color: LEGO_COLORS.RED
           }).setOrigin(0.5);
           this.roomContainer.add(hiddenMsg);
         });
@@ -168,8 +168,8 @@ class Chapter1Scene extends Phaser.Scene {
     bg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 1);
     bg.fillRoundedRect(-60, -15, 120, 30, 4);
     const lbl = this.add.text(0, -2, 'CHECK', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '10px',
+      fontFamily: '"Rajdhani"',
+      fontSize: '28px',
       color: LEGO_COLORS.WHITE
     }).setOrigin(0.5);
     submitBtn.add([bg, lbl]);
@@ -238,8 +238,8 @@ class Chapter1Scene extends Phaser.Scene {
 
     if (correct) {
       const successText = this.add.text(cx, GAME_HEIGHT / 2, 'PERFECT!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '24px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '32px',
         color: LEGO_COLORS.GREEN,
         stroke: '#000000',
         strokeThickness: 4
@@ -264,8 +264,8 @@ class Chapter1Scene extends Phaser.Scene {
       });
 
       const tryAgain = this.add.text(cx, GAME_HEIGHT / 2 + 80, `${correctCount}/${this.puzzleTarget.length} correct. Try again!`, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '8px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.RED
       }).setOrigin(0.5);
 
@@ -292,7 +292,7 @@ class Chapter1Scene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 55, 'Recreate the pattern below!\nClick cells to cycle colors.', {
-        fontFamily: '"Rajdhani"', fontSize: '14px', color: LEGO_COLORS.WHITE,
+        fontFamily: '"Rajdhani"', fontSize: '22px', color: LEGO_COLORS.WHITE,
         align: 'center', lineSpacing: 4
       }).setOrigin(0.5)
     );
@@ -361,7 +361,7 @@ class Chapter1Scene extends Phaser.Scene {
     bg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 1);
     bg.fillRoundedRect(-60, -15, 120, 30, 4);
     const lbl = this.add.text(0, -2, 'CHECK', {
-      fontFamily: '"Press Start 2P"', fontSize: '10px', color: LEGO_COLORS.WHITE
+      fontFamily: '"Rajdhani"', fontSize: '28px', color: LEGO_COLORS.WHITE
     }).setOrigin(0.5);
     checkBtn.add([bg, lbl]);
     checkBtn.setSize(120, 30);
@@ -376,13 +376,13 @@ class Chapter1Scene extends Phaser.Scene {
       }
       if (correct) {
         const text = this.add.text(cx, cy, 'PERFECT!', {
-          fontFamily: '"Press Start 2P"', fontSize: '20px', color: LEGO_COLORS.GREEN,
+          fontFamily: '"Rajdhani"', fontSize: '28px', color: LEGO_COLORS.GREEN,
           stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
         this.time.delayedCall(1000, () => { text.destroy(); this.nextRoom(); });
       } else {
         const text = this.add.text(cx, cy + 80, 'Not quite! Try again.', {
-          fontFamily: '"Press Start 2P"', fontSize: '9px', color: LEGO_COLORS.RED
+          fontFamily: '"Rajdhani"', fontSize: '22px', color: LEGO_COLORS.RED
         }).setOrigin(0.5);
         this.time.delayedCall(1500, () => text.destroy());
       }
@@ -410,8 +410,8 @@ class Chapter1Scene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 60, 'Watch the sequence, then repeat it!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5)
     );
@@ -491,8 +491,8 @@ class Chapter1Scene extends Phaser.Scene {
 
     if (correct) {
       const text = this.add.text(cx, 120, 'CORRECT!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '20px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '28px',
         color: LEGO_COLORS.GREEN
       }).setOrigin(0.5);
 
@@ -503,8 +503,8 @@ class Chapter1Scene extends Phaser.Scene {
     } else {
       this.playerSequence = [];
       const text = this.add.text(cx, 120, 'TRY AGAIN!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '14px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.RED
       }).setOrigin(0.5);
 
@@ -542,8 +542,8 @@ class Chapter1Scene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 50, 'Find matching LEGO set pairs!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '8px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5)
     );
@@ -573,8 +573,8 @@ class Chapter1Scene extends Phaser.Scene {
       this.roomContainer.add(front);
 
       const label = this.add.text(x, y, name, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.BLACK,
         align: 'center'
       }).setOrigin(0.5).setVisible(false);
@@ -656,7 +656,7 @@ class Chapter1Scene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 55, 'Arrange the bricks in the correct order!\nClick two bricks to swap them.', {
-        fontFamily: '"Rajdhani"', fontSize: '14px', color: LEGO_COLORS.WHITE,
+        fontFamily: '"Rajdhani"', fontSize: '22px', color: LEGO_COLORS.WHITE,
         align: 'center', lineSpacing: 4
       }).setOrigin(0.5)
     );
@@ -731,7 +731,7 @@ class Chapter1Scene extends Phaser.Scene {
     bg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 1);
     bg.fillRoundedRect(-60, -15, 120, 30, 4);
     const lbl = this.add.text(0, -2, 'CHECK', {
-      fontFamily: '"Press Start 2P"', fontSize: '10px', color: LEGO_COLORS.WHITE
+      fontFamily: '"Rajdhani"', fontSize: '28px', color: LEGO_COLORS.WHITE
     }).setOrigin(0.5);
     submitBtn.add([bg, lbl]);
     submitBtn.setSize(120, 30);
@@ -740,13 +740,13 @@ class Chapter1Scene extends Phaser.Scene {
       const correct = this.buildOrder.every((c, i) => c === this.buildTarget[i]);
       if (correct) {
         const text = this.add.text(cx, cy, 'PERFECT BUILD!', {
-          fontFamily: '"Press Start 2P"', fontSize: '20px', color: LEGO_COLORS.GREEN,
+          fontFamily: '"Rajdhani"', fontSize: '28px', color: LEGO_COLORS.GREEN,
           stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
         this.time.delayedCall(1000, () => { text.destroy(); this.nextRoom(); });
       } else {
         const text = this.add.text(cx, cy + 50, 'Not in order! Try swapping.', {
-          fontFamily: '"Press Start 2P"', fontSize: '9px', color: LEGO_COLORS.RED
+          fontFamily: '"Rajdhani"', fontSize: '22px', color: LEGO_COLORS.RED
         }).setOrigin(0.5);
         this.time.delayedCall(1500, () => text.destroy());
       }

@@ -75,8 +75,8 @@ class Chapter2Scene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 55, instrText, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE,
         align: 'center',
         lineSpacing: 6
@@ -126,8 +126,8 @@ class Chapter2Scene extends Phaser.Scene {
       this.roomContainer.add(roomGfx);
       this.roomContainer.add(
         this.add.text(x + roomW / 2, y + 12, roomNames[i], {
-          fontFamily: '"Press Start 2P"',
-          fontSize: '9px',
+          fontFamily: '"Rajdhani"',
+          fontSize: '22px',
           color: LEGO_COLORS.TAN
         }).setOrigin(0.5)
       );
@@ -135,8 +135,8 @@ class Chapter2Scene extends Phaser.Scene {
       // Show burglar path for host
       if (isHost && this.trapPositions.includes(i)) {
         const burglarIcon = this.add.text(x + roomW / 2, y + roomH / 2, 'BURGLAR', {
-          fontFamily: '"Press Start 2P"',
-          fontSize: '9px',
+          fontFamily: '"Rajdhani"',
+          fontSize: '22px',
           color: LEGO_COLORS.RED
         }).setOrigin(0.5);
         this.roomContainer.add(burglarIcon);
@@ -152,8 +152,8 @@ class Chapter2Scene extends Phaser.Scene {
 
       // Trap slot (clickable for guest)
       const trapLabel = this.add.text(x + roomW / 2, y + roomH - 15, '', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.GREEN
       }).setOrigin(0.5);
       this.roomContainer.add(trapLabel);
@@ -189,8 +189,8 @@ class Chapter2Scene extends Phaser.Scene {
     bg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 1);
     bg.fillRoundedRect(-70, -15, 140, 30, 4);
     const lbl = this.add.text(0, -2, 'ACTIVATE!', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '10px',
+      fontFamily: '"Rajdhani"',
+      fontSize: '28px',
       color: LEGO_COLORS.WHITE
     }).setOrigin(0.5);
     submitBtn.add([bg, lbl]);
@@ -215,8 +215,8 @@ class Chapter2Scene extends Phaser.Scene {
     const quote = getRandomQuote('ideas');
     this.roomContainer.add(
       this.add.text(cx, GAME_HEIGHT - 35, `"${quote.text}"`, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.GREY,
         wordWrap: { width: 600 },
         align: 'center'
@@ -231,8 +231,8 @@ class Chapter2Scene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 60, 'Hit TRAP when the burglar\ncrosses the red zone!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '8px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE,
         align: 'center',
         lineSpacing: 6
@@ -257,8 +257,8 @@ class Chapter2Scene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(trapX + 30, floorY - 55, 'TRAP', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.RED
       }).setOrigin(0.5)
     );
@@ -296,8 +296,8 @@ class Chapter2Scene extends Phaser.Scene {
     btnBg.fillStyle(hexToInt(LEGO_COLORS.RED), 1);
     btnBg.fillRoundedRect(-80, -25, 160, 50, 8);
     const btnLbl = this.add.text(0, -3, 'TRAP!', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '18px',
+      fontFamily: '"Rajdhani"',
+      fontSize: '28px',
       color: LEGO_COLORS.WHITE
     }).setOrigin(0.5);
     trapBtn.add([btnBg, btnLbl]);
@@ -318,8 +318,8 @@ class Chapter2Scene extends Phaser.Scene {
     if (bx >= this.trapZoneX && bx <= this.trapZoneX + this.trapZoneW) {
       this.timingSuccess = true;
       const text = this.add.text(GAME_WIDTH / 2, 140, 'GOT HIM!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '20px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '28px',
         color: LEGO_COLORS.GREEN,
         stroke: '#000000',
         strokeThickness: 3
@@ -333,8 +333,8 @@ class Chapter2Scene extends Phaser.Scene {
       });
     } else {
       const text = this.add.text(GAME_WIDTH / 2, 140, 'MISSED!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '14px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.RED
       }).setOrigin(0.5);
       this.time.delayedCall(800, () => text.destroy());
@@ -362,8 +362,8 @@ class Chapter2Scene extends Phaser.Scene {
         : isHost
           ? 'Tell your partner the trap order!'
           : 'Place traps in the order your partner tells you!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5)
     );
@@ -372,8 +372,8 @@ class Chapter2Scene extends Phaser.Scene {
     if (isHost) {
       this.roomContainer.add(
         this.add.text(cx, 90, 'ORDER:', {
-          fontFamily: '"Press Start 2P"',
-          fontSize: '8px',
+          fontFamily: '"Rajdhani"',
+          fontSize: '22px',
           color: LEGO_COLORS.GREY
         }).setOrigin(0.5)
       );
@@ -381,8 +381,8 @@ class Chapter2Scene extends Phaser.Scene {
       this.trapSequence.forEach((trap, i) => {
         this.roomContainer.add(
           this.add.text(cx, 110 + i * 20, `${i + 1}. ${trap}`, {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '9px',
+            fontFamily: '"Rajdhani"',
+            fontSize: '22px',
             color: LEGO_COLORS.YELLOW
           }).setOrigin(0.5)
         );
@@ -391,8 +391,8 @@ class Chapter2Scene extends Phaser.Scene {
 
     // Trap buttons for guest
     this.sequenceDisplay = this.add.text(cx, GAME_HEIGHT / 2 - 20, '', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '8px',
+      fontFamily: '"Rajdhani"',
+      fontSize: '22px',
       color: LEGO_COLORS.GREEN,
       align: 'center',
       lineSpacing: 4
@@ -411,8 +411,8 @@ class Chapter2Scene extends Phaser.Scene {
       bg.fillStyle(hexToInt(LEGO_COLORS.ORANGE), 1);
       bg.fillRoundedRect(-55, -15, 110, 30, 4);
       const lbl = this.add.text(0, -2, trap, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5);
       btn.add([bg, lbl]);
@@ -454,8 +454,8 @@ class Chapter2Scene extends Phaser.Scene {
 
     if (correct) {
       const text = this.add.text(cx, 140, 'PERFECT SETUP!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '16px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.GREEN
       }).setOrigin(0.5);
       this.time.delayedCall(1000, () => { text.destroy(); this.nextRoom(); });
@@ -463,8 +463,8 @@ class Chapter2Scene extends Phaser.Scene {
       this.playerSequence = [];
       this.sequenceDisplay.setText('');
       const text = this.add.text(cx, 140, 'WRONG ORDER!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '12px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '28px',
         color: LEGO_COLORS.RED
       }).setOrigin(0.5);
       this.time.delayedCall(1000, () => text.destroy());
@@ -506,8 +506,8 @@ class Chapter2Scene extends Phaser.Scene {
         : isHost
           ? "You see Kevin's path! Tell your partner which doors to open."
           : "Open doors so Kevin can escape! Your partner sees the path.", {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE,
         align: 'center',
         lineSpacing: 5
@@ -532,8 +532,8 @@ class Chapter2Scene extends Phaser.Scene {
       if (isHost && this.mazePath.includes(i)) {
         const pathMarker = this.add.text(x + (cellW - 4) / 2, y + (cellH - 4) / 2,
           i === 0 ? 'START' : (i === this.mazePath[this.mazePath.length - 1] ? 'EXIT' : this.mazePath.indexOf(i).toString()), {
-          fontFamily: '"Press Start 2P"',
-          fontSize: '9px',
+          fontFamily: '"Rajdhani"',
+          fontSize: '22px',
           color: LEGO_COLORS.GREEN
         }).setOrigin(0.5);
         this.roomContainer.add(pathMarker);
@@ -541,8 +541,8 @@ class Chapter2Scene extends Phaser.Scene {
 
       // Door label
       const doorLabel = this.add.text(x + (cellW - 4) / 2, y + (cellH - 4) / 2, 'DOOR', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.GREY
       }).setOrigin(0.5);
       if (isHost) doorLabel.setAlpha(0.3);
@@ -575,8 +575,8 @@ class Chapter2Scene extends Phaser.Scene {
     bg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 1);
     bg.fillRoundedRect(-60, -15, 120, 30, 4);
     const lbl = this.add.text(0, -2, 'CHECK', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '10px',
+      fontFamily: '"Rajdhani"',
+      fontSize: '28px',
       color: LEGO_COLORS.WHITE
     }).setOrigin(0.5);
     checkBtn.add([bg, lbl]);
@@ -605,8 +605,8 @@ class Chapter2Scene extends Phaser.Scene {
 
     if (pathCorrect && extraDoors === 0) {
       const text = this.add.text(cx, GAME_HEIGHT / 2, 'KEVIN ESCAPED!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '16px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.GREEN,
         stroke: '#000000',
         strokeThickness: 3
@@ -615,8 +615,8 @@ class Chapter2Scene extends Phaser.Scene {
     } else {
       const msg = pathCorrect ? 'Too many doors open!' : 'Path blocked!';
       const text = this.add.text(cx, GAME_HEIGHT / 2, msg, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '10px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '28px',
         color: LEGO_COLORS.RED
       }).setOrigin(0.5);
       this.time.delayedCall(1500, () => text.destroy());
@@ -649,8 +649,8 @@ class Chapter2Scene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 60, "Who's coming next?\nStudy the pattern!", {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '8px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE,
         align: 'center',
         lineSpacing: 6
@@ -670,8 +670,8 @@ class Chapter2Scene extends Phaser.Scene {
 
       this.roomContainer.add(
         this.add.text(bx, 150, b.name, {
-          fontFamily: '"Press Start 2P"',
-          fontSize: '9px',
+          fontFamily: '"Rajdhani"',
+          fontSize: '22px',
           color: LEGO_COLORS.GREY
         }).setOrigin(0.5)
       );
@@ -681,8 +681,8 @@ class Chapter2Scene extends Phaser.Scene {
     const qx = cx + ((this.pattern.length) * 40) / 2;
     this.roomContainer.add(
       this.add.text(qx, 120, '?', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '24px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '32px',
         color: LEGO_COLORS.YELLOW
       }).setOrigin(0.5)
     );
@@ -697,8 +697,8 @@ class Chapter2Scene extends Phaser.Scene {
       bg.fillStyle(Phaser.Display.Color.HexStringToColor(b.color).color, 1);
       bg.fillRoundedRect(-35, -20, 70, 40, 4);
       const lbl = this.add.text(0, -2, b.name, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5);
       btn.add([bg, lbl]);
@@ -707,13 +707,13 @@ class Chapter2Scene extends Phaser.Scene {
       btn.on('pointerdown', () => {
         if (i === this.correctAnswer) {
           const text = this.add.text(cx, by + 60, 'CORRECT!', {
-            fontFamily: '"Press Start 2P"', fontSize: '14px',
+            fontFamily: '"Rajdhani"', fontSize: '22px',
             color: LEGO_COLORS.GREEN
           }).setOrigin(0.5);
           this.time.delayedCall(1000, () => { text.destroy(); this.nextRoom(); });
         } else {
           const text = this.add.text(cx, by + 60, 'WRONG!', {
-            fontFamily: '"Press Start 2P"', fontSize: '10px',
+            fontFamily: '"Rajdhani"', fontSize: '28px',
             color: LEGO_COLORS.RED
           }).setOrigin(0.5);
           this.time.delayedCall(800, () => text.destroy());
@@ -729,13 +729,13 @@ class Chapter2Scene extends Phaser.Scene {
       return { element: null, x: bx, y: by, callback: () => {
         if (idx === this.correctAnswer) {
           const text = this.add.text(cx, by + 60, 'CORRECT!', {
-            fontFamily: '"Press Start 2P"', fontSize: '14px',
+            fontFamily: '"Rajdhani"', fontSize: '22px',
             color: LEGO_COLORS.GREEN
           }).setOrigin(0.5);
           this.time.delayedCall(1000, () => { text.destroy(); this.nextRoom(); });
         } else {
           const text = this.add.text(cx, by + 60, 'WRONG!', {
-            fontFamily: '"Press Start 2P"', fontSize: '10px',
+            fontFamily: '"Rajdhani"', fontSize: '28px',
             color: LEGO_COLORS.RED
           }).setOrigin(0.5);
           this.time.delayedCall(800, () => text.destroy());
@@ -765,8 +765,8 @@ class Chapter2Scene extends Phaser.Scene {
 
     if (correct && extras === 0) {
       const text = this.add.text(cx, GAME_HEIGHT / 2, 'ALL TRAPPED!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '20px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '28px',
         color: LEGO_COLORS.GREEN,
         stroke: '#000000',
         strokeThickness: 3
@@ -775,8 +775,8 @@ class Chapter2Scene extends Phaser.Scene {
     } else {
       let correctCount = this.trapPositions.filter(pos => this.playerTraps[pos]).length;
       const text = this.add.text(cx, GAME_HEIGHT / 2 + 100, `${correctCount}/${this.trapPositions.length} traps correct. Try again!`, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.RED
       }).setOrigin(0.5);
       this.time.delayedCall(2000, () => text.destroy());

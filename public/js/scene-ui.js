@@ -287,17 +287,17 @@ const SceneUI = {
     panel.strokeRoundedRect(cx - 200, cy - 60, 400, 120, 10);
 
     const label = scene.add.text(cx, cy - 35, 'HINT', {
-      fontFamily: FONT_MONO, fontSize: '10px', fontStyle: 'bold',
+      fontFamily: FONT_MONO, fontSize: '14px', fontStyle: 'bold',
       color: LEGO_COLORS.YELLOW, letterSpacing: 3
     }).setOrigin(0.5).setDepth(352);
 
     const hint = scene.add.text(cx, cy + 5, hintText, {
-      fontFamily: FONT_BODY, fontSize: '14px', color: '#D0D8E8',
+      fontFamily: FONT_BODY, fontSize: '18px', color: '#D0D8E8',
       wordWrap: { width: 360 }, align: 'center', lineSpacing: 4
     }).setOrigin(0.5).setDepth(352);
 
     const dismiss = scene.add.text(cx, cy + 45, 'TAP TO CLOSE', {
-      fontFamily: FONT_MONO, fontSize: '9px', color: '#5A6A7A'
+      fontFamily: FONT_MONO, fontSize: '14px', color: '#5A6A7A'
     }).setOrigin(0.5).setDepth(352);
 
     scene._hintOverlay = { overlay, panel, label, hint, dismiss };
@@ -450,7 +450,7 @@ const SceneUI = {
     const promptText = scene.add.text(cx, GAME_HEIGHT - 15,
       confirmIcon + ' Select    ' + cancelIcon + ' Back    D-Pad Navigate', {
       fontFamily: FONT_MONO,
-      fontSize: '8px',
+      fontSize: '14px',
       color: '#4A5A6A',
       letterSpacing: 1
     }).setOrigin(0.5).setDepth(200);

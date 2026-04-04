@@ -37,7 +37,7 @@ const TEXT_STYLES = {
   },
   quote: {
     fontFamily: FONT_BODY,
-    fontSize: '13px',
+    fontSize: '16px',
     color: LEGO_COLORS.YELLOW,
     fontStyle: 'italic',
     wordWrap: { width: 600 },
@@ -46,37 +46,37 @@ const TEXT_STYLES = {
   },
   hud: {
     fontFamily: FONT_MONO,
-    fontSize: '11px',
+    fontSize: '14px',
     color: LEGO_COLORS.GREY
   },
   success: {
     fontFamily: FONT_TITLE,
-    fontSize: '24px',
+    fontSize: '32px',
     fontStyle: 'bold',
     color: LEGO_COLORS.GREEN
   },
   error: {
     fontFamily: FONT_TITLE,
-    fontSize: '16px',
+    fontSize: '22px',
     fontStyle: 'bold',
     color: LEGO_COLORS.RED
   },
   button: {
     fontFamily: FONT_TITLE,
-    fontSize: '14px',
+    fontSize: '18px',
     fontStyle: 'bold',
     color: '#FFFFFF',
     letterSpacing: 1
   },
   room: {
     fontFamily: FONT_TITLE,
-    fontSize: '20px',
+    fontSize: '28px',
     fontStyle: 'bold',
     color: LEGO_COLORS.WHITE
   },
   chapter: {
     fontFamily: FONT_MONO,
-    fontSize: '10px',
+    fontSize: '13px',
     color: LEGO_COLORS.CYAN,
     letterSpacing: 3
   }
@@ -125,7 +125,7 @@ function drawQuoteBox(scene, container, era) {
   container.add(
     scene.add.text(cx, GAME_HEIGHT - 44, '"' + quote.text + '"', {
       ...TEXT_STYLES.quote,
-      fontSize: '12px'
+      fontSize: '16px'
     }).setOrigin(0.5)
   );
 
@@ -159,7 +159,7 @@ function createGameButton(scene, container, x, y, text, callback, color, width) 
 
   const label = scene.add.text(0, 0, text, {
     ...TEXT_STYLES.button,
-    fontSize: '13px'
+    fontSize: '16px'
   }).setOrigin(0.5);
 
   btn.add([bg, label]);

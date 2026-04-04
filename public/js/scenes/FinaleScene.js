@@ -112,16 +112,16 @@ class FinaleScene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 80, 'ANTE TRIVIA', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '12px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '28px',
         color: LEGO_COLORS.BRIGHT_PINK
       }).setOrigin(0.5)
     );
 
     this.roomContainer.add(
       this.add.text(cx, 130, t.q, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE,
         wordWrap: { width: 600 },
         align: 'center'
@@ -132,7 +132,7 @@ class FinaleScene extends Phaser.Scene {
     this.triviaTimer = 10;
     this.triviaLocked = false;
     const timerText = this.add.text(cx, 165, `Time: ${this.triviaTimer}`, {
-      fontFamily: '"Press Start 2P"', fontSize: '10px', color: LEGO_COLORS.YELLOW
+      fontFamily: '"Rajdhani"', fontSize: '28px', color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5);
     this.roomContainer.add(timerText);
 
@@ -160,8 +160,8 @@ class FinaleScene extends Phaser.Scene {
       bg.fillStyle(Phaser.Display.Color.HexStringToColor(colors[i]).color, 1);
       bg.fillRoundedRect(-110, -22, 220, 44, 6);
       const lbl = this.add.text(0, -2, opt, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '8px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5);
       btn.add([bg, lbl]);
@@ -208,8 +208,8 @@ class FinaleScene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 70, 'SPEED BUILD!\nClick bricks 1-12 in order!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '8px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.YELLOW,
         align: 'center',
         lineSpacing: 6
@@ -242,8 +242,8 @@ class FinaleScene extends Phaser.Scene {
       this.roomContainer.add(brick);
 
       const label = this.add.text(pos.x, pos.y, num.toString(), {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '12px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '28px',
         color: LEGO_COLORS.WHITE,
         stroke: '#000000',
         strokeThickness: 2
@@ -288,8 +288,8 @@ class FinaleScene extends Phaser.Scene {
     // Timer
     this.buildTimer = 10;
     this.timerText = this.add.text(cx, GAME_HEIGHT - 50, `Time: ${this.buildTimer}`, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '10px',
+      fontFamily: '"Rajdhani"',
+      fontSize: '28px',
       color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5);
     this.roomContainer.add(this.timerText);
@@ -335,8 +335,8 @@ class FinaleScene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 70, "Which quote is really Ante's?", {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.BRIGHT_PINK
       }).setOrigin(0.5)
     );
@@ -354,16 +354,16 @@ class FinaleScene extends Phaser.Scene {
 
       this.roomContainer.add(
         this.add.text(80, by - 10, `${i + 1}.`, {
-          fontFamily: '"Press Start 2P"',
-          fontSize: '10px',
+          fontFamily: '"Rajdhani"',
+          fontSize: '28px',
           color: quoteColors[i]
         })
       );
 
       this.roomContainer.add(
         this.add.text(cx, by + 5, `"${quote}"`, {
-          fontFamily: '"Press Start 2P"',
-          fontSize: '8px',
+          fontFamily: '"Rajdhani"',
+          fontSize: '22px',
           color: LEGO_COLORS.WHITE,
           wordWrap: { width: 500 },
           align: 'center',
@@ -406,8 +406,8 @@ class FinaleScene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 70, 'How many bricks do you count?', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.YELLOW
       }).setOrigin(0.5)
     );
@@ -443,8 +443,8 @@ class FinaleScene extends Phaser.Scene {
       bg.fillStyle(hexToInt(LEGO_COLORS.BLUE), 1);
       bg.fillRoundedRect(-30, -18, 60, 36, 4);
       const lbl = this.add.text(0, -2, num.toString(), {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '12px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '28px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5);
       btn.add([bg, lbl]);
@@ -539,8 +539,8 @@ class FinaleScene extends Phaser.Scene {
     this.time.delayedCall(totalDelay, () => {
       // Happy Birthday text
       const title = this.add.text(cx, cy - 120, 'HAPPY BIRTHDAY', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '18px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '28px',
         color: LEGO_COLORS.YELLOW,
         stroke: '#000000',
         strokeThickness: 4
@@ -550,8 +550,8 @@ class FinaleScene extends Phaser.Scene {
 
       // Ante's name
       const name = this.add.text(cx, cy + 70, 'ANTE!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '24px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '32px',
         color: LEGO_COLORS.BRIGHT_PINK,
         stroke: '#000000',
         strokeThickness: 4
@@ -562,8 +562,8 @@ class FinaleScene extends Phaser.Scene {
       // Personal message
       const msg = this.add.text(cx, cy + 120,
         'From Croatia to Billund, from fan to Design Master.\nEvery brick you\'ve placed tells a story.\nHere\'s to 40 more years of building dreams!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE,
         align: 'center',
         lineSpacing: 8,
@@ -575,8 +575,8 @@ class FinaleScene extends Phaser.Scene {
       // Signature
       const sig = this.add.text(cx, cy + 190,
         'Designed by Yossi, for Ante\nEvery brick counts.', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.YELLOW,
         align: 'center',
         lineSpacing: 6
@@ -589,8 +589,8 @@ class FinaleScene extends Phaser.Scene {
 
       // "40/40 Bricks Collected" at bottom
       const complete = this.add.text(cx, GAME_HEIGHT - 30, '40/40 Bricks Collected', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '8px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.GREEN
       }).setOrigin(0.5).setAlpha(0);
 
@@ -634,8 +634,8 @@ class FinaleScene extends Phaser.Scene {
   showFeedback(msg, color, onComplete) {
     const cx = GAME_WIDTH / 2;
     const text = this.add.text(cx, GAME_HEIGHT / 2, msg, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '14px',
+      fontFamily: '"Rajdhani"',
+      fontSize: '22px',
       color: color,
       stroke: '#000000',
       strokeThickness: 3

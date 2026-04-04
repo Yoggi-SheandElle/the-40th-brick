@@ -96,8 +96,8 @@ class Chapter3Scene extends Phaser.Scene {
         : isHost
           ? 'You see the LEFT runes. Tell your partner\nwhich right rune matches each!'
           : 'Match the runes! Your partner sees the left side.', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.ORANGE,
         align: 'center',
         lineSpacing: 5
@@ -116,8 +116,8 @@ class Chapter3Scene extends Phaser.Scene {
       if (isHost) {
         this.roomContainer.add(
           this.add.text(170, y, `= ${selected.indexOf(leftRunes[i]) + 1}`, {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '9px',
+            fontFamily: '"Rajdhani"',
+            fontSize: '22px',
             color: LEGO_COLORS.GREY
           }).setOrigin(0, 0.5)
         );
@@ -135,8 +135,8 @@ class Chapter3Scene extends Phaser.Scene {
       this.roomContainer.add(runeText);
 
       const numLabel = this.add.text(GAME_WIDTH - 170, y, '-', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '10px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '28px',
         color: LEGO_COLORS.GREY
       }).setOrigin(0.5);
       this.roomContainer.add(numLabel);
@@ -193,8 +193,8 @@ class Chapter3Scene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 55, 'Avoid the Eye! Click safe zones\nbefore the beam reaches them.', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.ORANGE,
         align: 'center',
         lineSpacing: 5
@@ -237,8 +237,8 @@ class Chapter3Scene extends Phaser.Scene {
       this.roomContainer.add(zone);
 
       const label = this.add.text(zx, zy, (i + 1).toString(), {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '10px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '28px',
         color: LEGO_COLORS.GREY
       }).setOrigin(0.5);
       this.roomContainer.add(label);
@@ -329,8 +329,8 @@ class Chapter3Scene extends Phaser.Scene {
         : isHost
           ? 'You found clues! Tell your partner which book to grab.'
           : 'Pick the right book based on your partner\'s clues!', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.ORANGE,
         align: 'center',
         lineSpacing: 5
@@ -342,8 +342,8 @@ class Chapter3Scene extends Phaser.Scene {
       clues.forEach((clue, i) => {
         this.roomContainer.add(
           this.add.text(cx, 90 + i * 20, clue, {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '9px',
+            fontFamily: '"Rajdhani"',
+            fontSize: '22px',
             color: LEGO_COLORS.YELLOW
           }).setOrigin(0.5)
         );
@@ -376,8 +376,8 @@ class Chapter3Scene extends Phaser.Scene {
       this.roomContainer.add(bookGfx);
 
       const titleText = this.add.text(bx, by + 40, book.title, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5);
       this.roomContainer.add(titleText);
@@ -416,8 +416,8 @@ class Chapter3Scene extends Phaser.Scene {
     this.roomContainer.add(
       this.add.text(cx, GAME_HEIGHT - 35,
         '"We thought Sauron has been around for thousands of years,\nso he has books containing all his knowledge and magic."', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.GREY,
         align: 'center',
         lineSpacing: 4
@@ -444,8 +444,8 @@ class Chapter3Scene extends Phaser.Scene {
         : isHost
           ? 'You see the correct alignment!\nTell your partner how to rotate each section.'
           : 'Rotate tower sections to align them!\nYour partner knows the correct positions.', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.ORANGE,
         align: 'center',
         lineSpacing: 5
@@ -462,8 +462,8 @@ class Chapter3Scene extends Phaser.Scene {
       if (isHost) {
         this.roomContainer.add(
           this.add.text(cx - 150, y + 15, `Section ${i + 1}: ${symbols[targetPositions[i]]}`, {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '8px',
+            fontFamily: '"Rajdhani"',
+            fontSize: '22px',
             color: LEGO_COLORS.YELLOW
           }).setOrigin(0.5)
         );
@@ -484,8 +484,8 @@ class Chapter3Scene extends Phaser.Scene {
       this.roomContainer.add(arrow);
 
       const label = this.add.text(cx + 90, y + 28, `Section ${i + 1}`, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.GREY
       }).setOrigin(0, 0.5);
       this.roomContainer.add(label);
@@ -553,8 +553,8 @@ class Chapter3Scene extends Phaser.Scene {
         : isHost
           ? 'You know the order the Ring must pass!\nTell your partner who gets it next.'
           : 'Pass the Ring in the correct order!\nYour partner knows the sequence.', {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.ORANGE,
         align: 'center',
         lineSpacing: 5
@@ -566,8 +566,8 @@ class Chapter3Scene extends Phaser.Scene {
       correctOrder.forEach((name, i) => {
         this.roomContainer.add(
           this.add.text(cx, 95 + i * 18, `${i + 1}. ${name}`, {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '9px',
+            fontFamily: '"Rajdhani"',
+            fontSize: '22px',
             color: LEGO_COLORS.YELLOW
           }).setOrigin(0.5)
         );
@@ -584,8 +584,8 @@ class Chapter3Scene extends Phaser.Scene {
 
     // Sequence display
     this.ringDisplay = this.add.text(cx, GAME_HEIGHT / 2 + 10, '', {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '9px',
+      fontFamily: '"Rajdhani"',
+      fontSize: '22px',
       color: LEGO_COLORS.GREEN,
       align: 'center',
       lineSpacing: 4
@@ -604,8 +604,8 @@ class Chapter3Scene extends Phaser.Scene {
       bg.lineStyle(1, hexToInt(LEGO_COLORS.ORANGE), 0.5);
       bg.strokeRoundedRect(-50, -18, 100, 36, 4);
       const lbl = this.add.text(0, -2, name, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '9px',
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5);
       btn.add([bg, lbl]);
@@ -673,8 +673,8 @@ class Chapter3Scene extends Phaser.Scene {
   showSuccess(msg) {
     const cx = GAME_WIDTH / 2;
     const text = this.add.text(cx, GAME_HEIGHT / 2, msg, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '14px',
+      fontFamily: '"Rajdhani"',
+      fontSize: '22px',
       color: LEGO_COLORS.GREEN,
       stroke: '#000000',
       strokeThickness: 3
@@ -689,8 +689,8 @@ class Chapter3Scene extends Phaser.Scene {
   showError(msg) {
     const cx = GAME_WIDTH / 2;
     const text = this.add.text(cx, GAME_HEIGHT / 2, msg, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '9px',
+      fontFamily: '"Rajdhani"',
+      fontSize: '22px',
       color: LEGO_COLORS.RED
     }).setOrigin(0.5).setDepth(100);
 
@@ -703,8 +703,8 @@ class Chapter3Scene extends Phaser.Scene {
     bg.fillStyle(hexToInt(LEGO_COLORS.DARK_RED), 1);
     bg.fillRoundedRect(-60, -15, 120, 30, 4);
     const lbl = this.add.text(0, -2, text, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '10px',
+      fontFamily: '"Rajdhani"',
+      fontSize: '28px',
       color: LEGO_COLORS.WHITE
     }).setOrigin(0.5);
     btn.add([bg, lbl]);
