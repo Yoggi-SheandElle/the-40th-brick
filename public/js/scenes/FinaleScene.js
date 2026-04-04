@@ -47,12 +47,13 @@ class FinaleScene extends Phaser.Scene {
     SceneUI.createRoomHeader(this, 4, 'ROOM 40', titles[roomIndex] || 'Room ' + (roomIndex + 1), 30 + roomIndex + 1, 40);
 
     // Mix of fast puzzles from all chapters
-    const puzzleType = roomIndex % 4;
+    const puzzleType = roomIndex % 5;
     switch (puzzleType) {
       case 0: this.createTriviaPuzzle(roomIndex); break;
       case 1: this.createSpeedBuildPuzzle(); break;
       case 2: this.createQuoteGuessPuzzle(); break;
       case 3: this.createBrickCountPuzzle(roomIndex); break;
+      case 4: this.createSetAssemblyPuzzle(roomIndex); break;
     }
   }
 
@@ -475,6 +476,165 @@ class FinaleScene extends Phaser.Scene {
       }};
     });
     InputSystem.setFocusables(countFocusables);
+  }
+
+  // PUZZLE: Timed Set Assembly - reassemble Ante's iconic LEGO sets
+  createSetAssemblyPuzzle(roomIndex) {
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
+
+    const sets = [
+      { name: "Emma's Fashion Shop", year: 2018, theme: 'Friends', pieces: 6,
+        parts: ['Corner wall', 'Shop window', 'Upstairs room', 'Dress rack', 'Sewing machine', 'Balcony'] },
+      { name: 'Home Alone House', year: 2021, theme: 'Ideas', pieces: 6,
+        parts: ['Front wall (opening)', 'Kitchen', 'Bathroom', 'Attic', 'Treehouse', 'Zipline'] },
+      { name: 'Table Football', year: 2022, theme: 'Ideas', pieces: 6,
+        parts: ['Pitch base', 'Goal mechanism', 'Player rods', 'Score counter', 'Side walls', 'Ball launcher'] },
+      { name: 'Alpine Lodge', year: 2024, theme: 'Icons', pieces: 7,
+        parts: ['Log cabin base', 'A-frame roof', 'Balcony', 'Fireplace', 'Snowmobile', 'Ski rack', 'Chimney'] },
+      { name: 'Barad-dur', year: 2024, theme: 'Icons', pieces: 8,
+        parts: ['Tower base', 'Orc forge', "Sauron's library", 'Prison cell', 'Spiral staircase', 'Upper tower', 'Eye of Sauron', 'Sauron minifig'] },
+      { name: "Da Vinci's Flying Machine", year: 2025, theme: 'Icons', pieces: 7,
+        parts: ['Wing frame L', 'Wing frame R', 'String mechanism', 'Pilot seat', 'Tail section', 'Display stand', 'Crank handle'] }
+    ];
+
+    const setData = sets[roomIndex % sets.length];
+    const numParts = setData.parts.length;
+
+    // Shuffle parts
+    const shuffled = [...setData.parts];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    this.assemblyOrder = [];
+    this.assemblyTarget = setData.parts; // correct order
+    this.assemblyTimer = 20;
+
+    this.roomContainer.add(
+      this.add.text(cx, 58, 'ASSEMBLE: ' + setData.name.toUpperCase(), {
+        fontFamily: FONT_TITLE, fontSize: '16px', fontStyle: 'bold',
+        color: LEGO_COLORS.YELLOW
+      }).setOrigin(0.5)
+    );
+
+    this.roomContainer.add(
+      this.add.text(cx, 78, setData.theme + ' (' + setData.year + ') - ' + numParts + ' sections', {
+        fontFamily: FONT_BODY, fontSize: '13px', color: '#8896AA'
+      }).setOrigin(0.5)
+    );
+
+    this.roomContainer.add(
+      this.add.text(cx, 98, 'Tap parts in the correct build order!', {
+        fontFamily: FONT_BODY, fontSize: '14px', color: LEGO_COLORS.CYAN
+      }).setOrigin(0.5)
+    );
+
+    // Assembly progress display
+    this.assemblyProgress = this.add.text(cx, 120, '', {
+      fontFamily: FONT_BODY, fontSize: '13px', color: LEGO_COLORS.GREEN,
+      align: 'center', wordWrap: { width: 500 }
+    }).setOrigin(0.5);
+    this.roomContainer.add(this.assemblyProgress);
+
+    // Part buttons (shuffled)
+    const cols = Math.min(4, numParts);
+    const rows = Math.ceil(numParts / cols);
+    const btnW = 180;
+    const btnH = 40;
+    const gapX = 12;
+    const gapY = 10;
+    const startX = cx - ((cols * (btnW + gapX) - gapX) / 2) + btnW / 2;
+    const startY = 155;
+    const focusItems = [];
+
+    shuffled.forEach((part, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const bx = startX + col * (btnW + gapX);
+      const by = startY + row * (btnH + gapY);
+
+      const btn = this.add.container(bx, by);
+      const bg = this.add.graphics();
+      bg.fillStyle(0x1A2030, 1);
+      bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      bg.lineStyle(1, hexToInt(LEGO_COLORS.CYAN), 0.3);
+      bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      const lbl = this.add.text(0, 0, part, {
+        fontFamily: FONT_BODY, fontSize: '13px', color: '#D0D8E8'
+      }).setOrigin(0.5);
+      btn.add([bg, lbl]);
+      btn.setSize(btnW, btnH);
+      btn.setInteractive({ useHandCursor: true });
+
+      const idx = i;
+      btn.on('pointerdown', () => {
+        const correctNext = this.assemblyTarget[this.assemblyOrder.length];
+        if (part === correctNext) {
+          // Correct!
+          this.assemblyOrder.push(part);
+          bg.clear();
+          bg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 0.3);
+          bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+          lbl.setColor(LEGO_COLORS.GREEN);
+          btn.disableInteractive();
+          InputSystem.vibrate(50, 0.2, 0.3);
+
+          this.assemblyProgress.setText(
+            this.assemblyOrder.map((p, j) => (j + 1) + '. ' + p).join('  >  ')
+          );
+
+          network.sendPuzzleAction('assembly_pick', { part, index: this.assemblyOrder.length });
+
+          if (this.assemblyOrder.length === numParts) {
+            this.showFeedback('SET COMPLETE!\n' + setData.name, LEGO_COLORS.GREEN, () => this.nextRoom());
+          }
+        } else {
+          // Wrong order
+          bg.clear();
+          bg.fillStyle(hexToInt(LEGO_COLORS.RED), 0.2);
+          bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+          bg.lineStyle(1, hexToInt(LEGO_COLORS.RED), 0.5);
+          bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+          InputSystem.vibrate(100, 0.4, 0.6);
+          this.time.delayedCall(500, () => {
+            bg.clear();
+            bg.fillStyle(0x1A2030, 1);
+            bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+            bg.lineStyle(1, hexToInt(LEGO_COLORS.CYAN), 0.3);
+            bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+            lbl.setColor('#D0D8E8');
+          });
+        }
+      });
+      this.roomContainer.add(btn);
+      focusItems.push({ element: btn, x: bx, y: by, callback: () => btn.emit('pointerdown') });
+    });
+
+    // Timer
+    this.assemblyTimerText = this.add.text(cx, GAME_HEIGHT - 40, 'Time: ' + this.assemblyTimer, {
+      fontFamily: FONT_MONO, fontSize: '14px', color: LEGO_COLORS.YELLOW
+    }).setOrigin(0.5);
+    this.roomContainer.add(this.assemblyTimerText);
+
+    this.time.addEvent({
+      delay: 1000,
+      repeat: this.assemblyTimer - 1,
+      callback: () => {
+        this.assemblyTimer--;
+        if (this.assemblyTimerText) {
+          this.assemblyTimerText.setText('Time: ' + this.assemblyTimer);
+          if (this.assemblyTimer <= 5) this.assemblyTimerText.setColor(LEGO_COLORS.RED);
+        }
+        if (this.assemblyTimer <= 0) {
+          this.showFeedback('TIME UP!\nThe set stays unfinished...', LEGO_COLORS.RED);
+          this.time.delayedCall(2000, () => this.startRoom(this.currentRoom));
+        }
+      }
+    });
+
+    InputSystem.setFocusables(focusItems);
   }
 
   showBirthdayReveal() {
