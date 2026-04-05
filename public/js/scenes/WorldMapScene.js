@@ -96,6 +96,27 @@ class WorldMapScene extends Phaser.Scene {
       GamepadManager.setFocusables(focusables);
     }
 
+    // Tier divider line between Ch2 and Ch3
+    const dividerX = 80 + 1 * spacing + spacing / 2; // between chapter 2 and 3
+    const divGfx = this.add.graphics();
+    divGfx.lineStyle(2, hexToInt(LEGO_COLORS.YELLOW), 0.3);
+    divGfx.lineBetween(dividerX, lineY - 80, dividerX, lineY + 80);
+
+    this.add.text(dividerX, lineY - 95, 'PERSONAL', {
+      fontFamily: FONT_MONO,
+      fontSize: '8px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.YELLOW,
+      letterSpacing: 2
+    }).setOrigin(0.5).setAlpha(0.5);
+
+    this.add.text(dividerX, lineY + 95, 'Only Ante can pass', {
+      fontFamily: FONT_BODY,
+      fontSize: '10px',
+      color: '#5A6A7A',
+      fontStyle: 'italic'
+    }).setOrigin(0.5).setAlpha(0.4);
+
     // Progress section
     const completedRooms = SaveManager.getProgress().solved;
     const pct = Math.round((completedRooms / 40) * 100);

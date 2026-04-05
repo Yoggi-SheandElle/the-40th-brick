@@ -46,6 +46,17 @@ class FinaleScene extends Phaser.Scene {
     ];
     SceneUI.createRoomHeader(this, 4, 'ROOM 40', titles[roomIndex] || 'Room ' + (roomIndex + 1), 30 + roomIndex + 1, 40);
 
+    // Personal celebration intro (Ante's milestones)
+    const milestones = ['2021: Home Alone ships!', '2022: Table Football', '2023: New challenges',
+                        '2024: Alpine Lodge + Barad-dur', '2025: Flying Machine', '2026: Master Designer',
+                        'The legacy continues', 'Almost there...', 'The final brick'];
+    const introText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 20,
+      milestones[roomIndex] || 'A milestone in the journey', {
+      fontFamily: FONT_BODY, fontSize: '13px', color: LEGO_COLORS.YELLOW, fontStyle: 'italic'
+    }).setOrigin(0.5).setAlpha(0).setDepth(10);
+    this.roomContainer.add(introText);
+    this.tweens.add({ targets: introText, alpha: 0.8, duration: 500, yoyo: true, hold: 2500 });
+
     // Mix of fast puzzles from all chapters
     const puzzleType = roomIndex % 5;
     switch (puzzleType) {
@@ -815,27 +826,36 @@ class FinaleScene extends Phaser.Scene {
 
   nextRoom() {
     SaveManager.solveRoom(this.chapter || 4, (this.currentRoom || 0) + 1);
-    if (this.currentRoom >= this.totalRooms - 1) {
-      this.showBirthdayReveal();
-      return;
-    }
+    const totalSolved = SaveManager.getProgress().solved;
 
-    const cx = GAME_WIDTH / 2;
-    const cy = GAME_HEIGHT / 2;
-    const transition = this.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0);
-    this.tweens.add({
-      targets: transition,
-      alpha: 1,
-      duration: 300,
-      onComplete: () => {
-        this.startRoom(this.currentRoom + 1);
-        this.tweens.add({
-          targets: transition,
-          alpha: 0,
-          duration: 300,
-          onComplete: () => transition.destroy()
-        });
+    const proceed = () => {
+      if (this.currentRoom >= this.totalRooms - 1) {
+        this.showBirthdayReveal();
+        return;
       }
-    });
+      const cx = GAME_WIDTH / 2;
+      const cy = GAME_HEIGHT / 2;
+      const transition = this.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0);
+      this.tweens.add({
+        targets: transition,
+        alpha: 1,
+        duration: 300,
+        onComplete: () => {
+          this.startRoom(this.currentRoom + 1);
+          this.tweens.add({
+            targets: transition,
+            alpha: 0,
+            duration: 300,
+            onComplete: () => transition.destroy()
+          });
+        }
+      });
+    };
+
+    if (CELEBRATION_MESSAGES[totalSolved]) {
+      SceneUI.showCelebration(this, totalSolved, proceed);
+    } else {
+      proceed();
+    }
   }
 }

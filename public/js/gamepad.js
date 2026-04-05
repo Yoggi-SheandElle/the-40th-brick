@@ -379,6 +379,9 @@ function detectPlatform() {
   if (ua.includes('steamdeck') || (ua.includes('linux') && ua.includes('valve'))) return 'steamdeck';
   if (ua.includes('playstation')) return 'playstation';
   if (/android|iphone|ipad|ipod/i.test(ua)) return 'mobile';
+  if (ua.includes('smart-tv') || ua.includes('smarttv') || ua.includes('tizen') ||
+      ua.includes('webos') || ua.includes('crkey') || ua.includes('firetv') ||
+      (window.screen.width >= 2560 && !isTouchDevice())) return 'tv';
   return 'desktop';
 }
 

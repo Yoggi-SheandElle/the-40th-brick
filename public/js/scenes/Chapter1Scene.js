@@ -47,6 +47,16 @@ class Chapter1Scene extends Phaser.Scene {
 
     SceneUI.createRoomHeader(this, 1, 'THE FIRST BRICK', this.getRoomTitle(roomIndex), roomIndex + 1, this.totalRooms);
 
+    // Room celebration intro
+    const setNames = ['Heartlake City', "Emma's Shop", 'Friends HQ', 'Olivia\'s Lab', 'Stephanie\'s Stage',
+                      'Mia\'s Rescue', 'Andrea\'s Stage', 'Dolphin Bay', 'Horse Riding', 'The Masterpiece'];
+    const introText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 20,
+      'Celebrating Ante\'s work on ' + (setNames[roomIndex] || 'LEGO Friends'), {
+      fontFamily: FONT_BODY, fontSize: '12px', color: '#5A6A7A', fontStyle: 'italic'
+    }).setOrigin(0.5).setAlpha(0).setDepth(10);
+    this.roomContainer.add(introText);
+    this.tweens.add({ targets: introText, alpha: 0.7, duration: 500, yoyo: true, hold: 2000 });
+
     // Different puzzle types per room
     const puzzleType = roomIndex % 5;
     switch (puzzleType) {
@@ -771,35 +781,40 @@ class Chapter1Scene extends Phaser.Scene {
 
   nextRoom() {
     SaveManager.solveRoom(this.chapter || 1, (this.currentRoom || 0) + 1);
-    if (this.currentRoom >= this.totalRooms - 1) {
-      // Chapter complete!
-      const chapterAchievements = CHAPTER_ACHIEVEMENTS[this.chapter] || [];
-      const firstAchievement = chapterAchievements[0];
+    const totalSolved = SaveManager.getProgress().solved;
 
-      if (firstAchievement) {
-        network.sendChapterComplete(firstAchievement, this.chapter + 1);
+    const proceed = () => {
+      if (this.currentRoom >= this.totalRooms - 1) {
+        const chapterAchievements = CHAPTER_ACHIEVEMENTS[this.chapter] || [];
+        const firstAchievement = chapterAchievements[0];
+        if (firstAchievement) {
+          network.sendChapterComplete(firstAchievement, this.chapter + 1);
+        }
+        return;
       }
-      return;
+      const cx = GAME_WIDTH / 2;
+      const cy = GAME_HEIGHT / 2;
+      const transition = this.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0);
+      this.tweens.add({
+        targets: transition,
+        alpha: 1,
+        duration: 300,
+        onComplete: () => {
+          this.startRoom(this.currentRoom + 1);
+          this.tweens.add({
+            targets: transition,
+            alpha: 0,
+            duration: 300,
+            onComplete: () => transition.destroy()
+          });
+        }
+      });
+    };
+
+    if (CELEBRATION_MESSAGES[totalSolved]) {
+      SceneUI.showCelebration(this, totalSolved, proceed);
+    } else {
+      proceed();
     }
-
-    // Brief transition
-    const cx = GAME_WIDTH / 2;
-    const cy = GAME_HEIGHT / 2;
-
-    const transition = this.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0);
-    this.tweens.add({
-      targets: transition,
-      alpha: 1,
-      duration: 300,
-      onComplete: () => {
-        this.startRoom(this.currentRoom + 1);
-        this.tweens.add({
-          targets: transition,
-          alpha: 0,
-          duration: 300,
-          onComplete: () => transition.destroy()
-        });
-      }
-    });
   }
 }

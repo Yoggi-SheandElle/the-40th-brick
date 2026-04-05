@@ -78,6 +78,13 @@ document.addEventListener('visibilitychange', () => {
 
 // Keyboard navigation support (for desktop without controller)
 document.addEventListener('keydown', (e) => {
+  // Fullscreen toggle
+  if (e.key === 'F11') {
+    e.preventDefault();
+    const s = game.scene.scenes.find(s => s.scene.isActive());
+    if (s) { s.scale.isFullscreen ? s.scale.stopFullscreen() : s.scale.startFullscreen(); }
+    return;
+  }
   const keyMap = {
     'ArrowUp': 12, 'ArrowDown': 13, 'ArrowLeft': 14, 'ArrowRight': 15,
     'w': 12, 's': 13, 'a': 14, 'd': 15,

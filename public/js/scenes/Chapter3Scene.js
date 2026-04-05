@@ -44,6 +44,18 @@ class Chapter3Scene extends Phaser.Scene {
     ];
     SceneUI.createRoomHeader(this, 3, 'THE DARK TOWER', titles[roomIndex] || 'Room ' + (roomIndex + 1), roomIndex + 1, this.totalRooms);
 
+    // Personal celebration intro (Ante's milestones)
+    const milestones = ['2009: First LEGO creation', '2010: AFOL community', '2012: Dream of Billund',
+                        '2014: Design portfolio', '2015: LEGO interview', '2016: Joined LEGO!',
+                        '2017: Friends team', '2018: First shipped set', '2019: Senior designer',
+                        '2020: The vision grows'];
+    const introText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 20,
+      milestones[roomIndex] || 'A milestone in the journey', {
+      fontFamily: FONT_BODY, fontSize: '13px', color: LEGO_COLORS.YELLOW, fontStyle: 'italic'
+    }).setOrigin(0.5).setAlpha(0).setDepth(10);
+    this.roomContainer.add(introText);
+    this.tweens.add({ targets: introText, alpha: 0.8, duration: 500, yoyo: true, hold: 2500 });
+
     // Dark tower atmosphere
     this.drawTowerBg();
 
@@ -716,31 +728,40 @@ class Chapter3Scene extends Phaser.Scene {
 
   nextRoom() {
     SaveManager.solveRoom(this.chapter || 3, (this.currentRoom || 0) + 1);
-    if (this.currentRoom >= this.totalRooms - 1) {
-      const chapterAchievements = CHAPTER_ACHIEVEMENTS[this.chapter] || [];
-      const firstAchievement = chapterAchievements[0];
-      if (firstAchievement) {
-        network.sendChapterComplete(firstAchievement, this.chapter + 1);
-      }
-      return;
-    }
+    const totalSolved = SaveManager.getProgress().solved;
 
-    const cx = GAME_WIDTH / 2;
-    const cy = GAME_HEIGHT / 2;
-    const transition = this.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0);
-    this.tweens.add({
-      targets: transition,
-      alpha: 1,
-      duration: 300,
-      onComplete: () => {
-        this.startRoom(this.currentRoom + 1);
-        this.tweens.add({
-          targets: transition,
-          alpha: 0,
-          duration: 300,
-          onComplete: () => transition.destroy()
-        });
+    const proceed = () => {
+      if (this.currentRoom >= this.totalRooms - 1) {
+        const chapterAchievements = CHAPTER_ACHIEVEMENTS[this.chapter] || [];
+        const firstAchievement = chapterAchievements[0];
+        if (firstAchievement) {
+          network.sendChapterComplete(firstAchievement, this.chapter + 1);
+        }
+        return;
       }
-    });
+      const cx = GAME_WIDTH / 2;
+      const cy = GAME_HEIGHT / 2;
+      const transition = this.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0);
+      this.tweens.add({
+        targets: transition,
+        alpha: 1,
+        duration: 300,
+        onComplete: () => {
+          this.startRoom(this.currentRoom + 1);
+          this.tweens.add({
+            targets: transition,
+            alpha: 0,
+            duration: 300,
+            onComplete: () => transition.destroy()
+          });
+        }
+      });
+    };
+
+    if (CELEBRATION_MESSAGES[totalSolved]) {
+      SceneUI.showCelebration(this, totalSolved, proceed);
+    } else {
+      proceed();
+    }
   }
 }

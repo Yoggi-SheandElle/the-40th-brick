@@ -72,3 +72,19 @@ input[type="text"]:focus {
   width: 100vw;
   height: 100vh;
 }
+
+/* Landscape rotation prompt for mobile portrait */
+@media (max-width: 768px) and (orientation: portrait) {
+  body::after {
+    content: '\26F1  Rotate to landscape for the best experience';
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(10, 14, 23, 0.95);
+    color: #F2CD37;
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    text-align: center;
+    padding: 12px;
+    z-index: 99999;
+  }
+}

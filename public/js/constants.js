@@ -62,3 +62,39 @@ const BRICK_HEIGHT = 24;
 const FONT_TITLE = '"Orbitron", "Press Start 2P", monospace';
 const FONT_BODY = '"Rajdhani", "Press Start 2P", monospace';
 const FONT_MONO = '"Orbitron", monospace';
+
+// Device-aware UI scaling
+const DEVICE_PROFILES = {
+  mobile:    { fontScale: 0.75, hitScale: 1.6, buttonScale: 1.2 },
+  desktop:   { fontScale: 1.0,  hitScale: 1.0, buttonScale: 1.0 },
+  steamdeck: { fontScale: 0.95, hitScale: 1.3, buttonScale: 1.15 },
+  tv:        { fontScale: 1.25, hitScale: 1.5, buttonScale: 1.3 }
+};
+
+let _cachedProfile = null;
+function getDeviceProfile() {
+  if (_cachedProfile) return _cachedProfile;
+  const p = detectPlatform();
+  if (p === 'mobile') _cachedProfile = DEVICE_PROFILES.mobile;
+  else if (p === 'steamdeck') _cachedProfile = DEVICE_PROFILES.steamdeck;
+  else if (p === 'tv' || (window.screen.width >= 2560 && !isTouchDevice())) _cachedProfile = DEVICE_PROFILES.tv;
+  else _cachedProfile = DEVICE_PROFILES.desktop;
+  return _cachedProfile;
+}
+
+function scaledFont(basePx) {
+  return Math.round(basePx * getDeviceProfile().fontScale) + 'px';
+}
+
+// Celebration messages at room milestones
+const CELEBRATION_MESSAGES = {
+  5:  "5 bricks down! You're building something beautiful.",
+  10: "Chapter 1 complete! From Croatia to Heartlake City.",
+  15: "Halfway through Kevin's house! The traps are working.",
+  20: "20 bricks collected!\nFrom here, only the designer herself can pass.",
+  25: "Deep in Barad-dur now. Sauron's got nothing on you.",
+  30: "30 bricks. The tower is almost complete.",
+  35: "5 rooms to go. The final brick awaits.",
+  39: "One more. Just one more brick.",
+  40: "40.\nHappy Birthday, Antica.\nYou built this."
+};

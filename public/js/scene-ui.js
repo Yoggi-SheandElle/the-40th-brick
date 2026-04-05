@@ -28,6 +28,7 @@ const SceneUI = {
 
     // Pause button (top-right corner, always visible)
     SceneUI.addPauseButton(scene);
+    SceneUI.addFullscreenButton(scene);
 
     // Fade in
     scene.cameras.main.fadeIn(400, 10, 14, 23);
@@ -35,7 +36,7 @@ const SceneUI = {
 
   // Pause overlay with resume / quit options
   addPauseButton(scene) {
-    const pauseBtn = scene.add.text(GAME_WIDTH - 20, 22, '\u2759\u2759', {
+    const pauseBtn = scene.add.text(GAME_WIDTH - 70, 22, '\u2759\u2759', {
       fontFamily: FONT_MONO,
       fontSize: '14px',
       color: '#6A7A8A'
@@ -57,6 +58,123 @@ const SceneUI = {
         SceneUI.showPauseMenu(scene);
       } else if (scene._pauseOverlay) {
         SceneUI.hidePauseMenu(scene);
+      }
+    });
+  },
+
+  addFullscreenButton(scene) {
+    if (!document.fullscreenEnabled && !document.webkitFullscreenEnabled) return;
+    const fsBtn = scene.add.text(GAME_WIDTH - 45, 22, '\u26F6', {
+      fontFamily: FONT_MONO,
+      fontSize: '14px',
+      color: '#5A6A7A'
+    }).setOrigin(0.5).setDepth(300).setInteractive({ useHandCursor: true });
+    fsBtn.on('pointerover', () => fsBtn.setColor(LEGO_COLORS.YELLOW));
+    fsBtn.on('pointerout', () => fsBtn.setColor('#5A6A7A'));
+    fsBtn.on('pointerdown', () => {
+      if (scene.scale.isFullscreen) scene.scale.stopFullscreen();
+      else scene.scale.startFullscreen();
+    });
+  },
+
+  // Milestone celebration overlay with confetti
+  showCelebration(scene, roomNumber, callback) {
+    const msg = CELEBRATION_MESSAGES[roomNumber];
+    if (!msg) { if (callback) callback(); return; }
+
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
+
+    const overlay = scene.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x0A0E17, 0.85).setDepth(400);
+    overlay.setInteractive();
+
+    // Confetti burst
+    launchCelebrationConfetti(scene, cx, cy - 50, 50);
+    scene.time.delayedCall(300, () => launchCelebrationConfetti(scene, cx - 150, cy, 30));
+    scene.time.delayedCall(600, () => launchCelebrationConfetti(scene, cx + 150, cy, 30));
+
+    // Brick count
+    const brickText = scene.add.text(cx, cy - 80, roomNumber + '/40', {
+      fontFamily: FONT_TITLE,
+      fontSize: '48px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.YELLOW,
+      stroke: '#000000',
+      strokeThickness: 3
+    }).setOrigin(0.5).setDepth(401).setAlpha(0).setScale(0.5);
+
+    // Message
+    const msgText = scene.add.text(cx, cy + 10, msg, {
+      fontFamily: FONT_BODY,
+      fontSize: '18px',
+      color: '#D0D8E8',
+      align: 'center',
+      lineSpacing: 8,
+      wordWrap: { width: 500 }
+    }).setOrigin(0.5).setDepth(401).setAlpha(0);
+
+    // Room 20 special: gate locks message
+    let gateText = null;
+    if (roomNumber === 20) {
+      gateText = scene.add.text(cx, cy + 80, 'THE GATE LOCKS', {
+        fontFamily: FONT_TITLE,
+        fontSize: '16px',
+        fontStyle: 'bold',
+        color: LEGO_COLORS.RED,
+        letterSpacing: 4
+      }).setOrigin(0.5).setDepth(401).setAlpha(0);
+    }
+
+    // Animate in
+    scene.tweens.add({
+      targets: brickText,
+      alpha: 1, scale: 1,
+      duration: 500,
+      ease: 'Back.easeOut'
+    });
+    scene.tweens.add({
+      targets: msgText,
+      alpha: 1,
+      duration: 600,
+      delay: 300
+    });
+    if (gateText) {
+      scene.tweens.add({
+        targets: gateText,
+        alpha: 1,
+        duration: 600,
+        delay: 600
+      });
+    }
+
+    // Tap to continue
+    const continueText = scene.add.text(cx, GAME_HEIGHT - 60, 'TAP TO CONTINUE', {
+      fontFamily: FONT_MONO,
+      fontSize: '11px',
+      color: '#4A5A6A'
+    }).setOrigin(0.5).setDepth(401).setAlpha(0);
+    scene.tweens.add({ targets: continueText, alpha: 1, duration: 400, delay: 1500 });
+
+    // Dismiss
+    scene.time.delayedCall(1500, () => {
+      overlay.on('pointerdown', () => {
+        scene.tweens.add({
+          targets: [overlay, brickText, msgText, continueText, gateText].filter(Boolean),
+          alpha: 0,
+          duration: 300,
+          onComplete: () => {
+            [overlay, brickText, msgText, continueText, gateText].filter(Boolean).forEach(o => o.destroy());
+            if (callback) callback();
+          }
+        });
+      });
+    });
+
+    // Auto-dismiss after 8 seconds
+    scene.time.delayedCall(8000, () => {
+      if (overlay.active) {
+        [overlay, brickText, msgText, continueText, gateText].filter(Boolean).forEach(o => { if (o.active) o.destroy(); });
+        if (callback) callback();
       }
     });
   },

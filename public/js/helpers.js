@@ -82,6 +82,19 @@ const TEXT_STYLES = {
   }
 };
 
+// Apply device-aware font scaling to all TEXT_STYLES
+(function applyDeviceScaling() {
+  const profile = getDeviceProfile();
+  if (profile.fontScale === 1.0) return;
+  Object.keys(TEXT_STYLES).forEach(key => {
+    const style = TEXT_STYLES[key];
+    if (style.fontSize) {
+      const base = parseInt(style.fontSize);
+      style.fontSize = Math.round(base * profile.fontScale) + 'px';
+    }
+  });
+})();
+
 // Draw futuristic grid background
 function drawGridBg(scene) {
   const gfx = scene.add.graphics();
@@ -135,6 +148,32 @@ function drawQuoteBox(scene, container, era) {
       color: LEGO_COLORS.GREY
     }).setOrigin(0.5)
   );
+}
+
+// Celebration confetti burst
+function launchCelebrationConfetti(scene, x, y, count) {
+  count = count || 30;
+  const colors = [0xE05545, 0xF2CD37, 0x0055BF, 0x237841, 0xE4ADC8, 0xA83D15, 0x00D4FF];
+  for (let i = 0; i < count; i++) {
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size = 3 + Math.random() * 5;
+    const particle = scene.add.rectangle(x, y, size, size * 0.6, color).setDepth(500);
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 100 + Math.random() * 300;
+    const rotation = Math.random() * 6 - 3;
+    scene.tweens.add({
+      targets: particle,
+      x: x + Math.cos(angle) * speed,
+      y: y + Math.sin(angle) * speed + 200,
+      angle: rotation * 180,
+      alpha: 0,
+      scaleX: 0.2,
+      scaleY: 0.2,
+      duration: 1500 + Math.random() * 1000,
+      ease: 'Cubic.easeOut',
+      onComplete: () => particle.destroy()
+    });
+  }
 }
 
 // Create a futuristic glass-morphism button
