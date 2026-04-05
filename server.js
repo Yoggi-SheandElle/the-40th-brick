@@ -83,11 +83,18 @@ setInterval(() => {
   }
 }, 300000);
 
-// Serve static files with caching
+// Serve static files - no caching for JS/CSS to ensure fresh deploys
 app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: NODE_ENV === 'production' ? '1d' : 0,
-  etag: true,
-  lastModified: true
+  maxAge: 0,
+  etag: false,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js') || filePath.endsWith('.css') || filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
 }));
 
 // Health check
