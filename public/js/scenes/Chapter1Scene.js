@@ -298,13 +298,13 @@ class Chapter1Scene extends Phaser.Scene {
     );
 
     // Target pattern (top)
+    const cellSize = Math.min(30, 180 / gridSize);
+    const targetStartX = cx - (gridSize * (cellSize + 2)) / 2;
     this.roomContainer.add(
-      this.add.text(cx - 120, 85, 'TARGET:', {
+      this.add.text(targetStartX, 85, 'TARGET:', {
         fontFamily: '"Orbitron"', fontSize: '10px', color: LEGO_COLORS.CYAN, letterSpacing: 1
       }).setOrigin(0, 0.5)
     );
-    const cellSize = Math.min(30, 180 / gridSize);
-    const targetStartX = cx - 120;
     const targetStartY = 100;
     const targetGfx = this.add.graphics();
     for (let r = 0; r < gridSize; r++) {
@@ -317,7 +317,7 @@ class Chapter1Scene extends Phaser.Scene {
 
     // Player grid (bottom)
     this.roomContainer.add(
-      this.add.text(cx - 120, 100 + gridSize * (cellSize + 2) + 15, 'YOUR BUILD:', {
+      this.add.text(targetStartX, 100 + gridSize * (cellSize + 2) + 15, 'YOUR BUILD:', {
         fontFamily: '"Orbitron"', fontSize: '10px', color: LEGO_COLORS.CYAN, letterSpacing: 1
       }).setOrigin(0, 0.5)
     );

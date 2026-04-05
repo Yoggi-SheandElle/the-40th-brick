@@ -107,7 +107,7 @@ class Chapter3Scene extends Phaser.Scene {
     // Left runes (host sees with labels)
     leftRunes.forEach((rune, i) => {
       const y = 100 + i * 50;
-      const runeText = this.add.text(120, y, rune, {
+      const runeText = this.add.text(cx - 200, y, rune, {
         fontSize: '28px',
         color: isHost ? LEGO_COLORS.ORANGE : LEGO_COLORS.DARK_GREY
       }).setOrigin(0.5);
@@ -115,7 +115,7 @@ class Chapter3Scene extends Phaser.Scene {
 
       if (isHost) {
         this.roomContainer.add(
-          this.add.text(170, y, `= ${selected.indexOf(leftRunes[i]) + 1}`, {
+          this.add.text(cx - 150, y, `= ${selected.indexOf(leftRunes[i]) + 1}`, {
             fontFamily: '"Rajdhani"',
             fontSize: '22px',
             color: LEGO_COLORS.GREY
@@ -128,13 +128,13 @@ class Chapter3Scene extends Phaser.Scene {
     this.rightRuneSlots = [];
     rightRunes.forEach((rune, i) => {
       const y = 100 + i * 50;
-      const runeText = this.add.text(GAME_WIDTH - 120, y, rune, {
+      const runeText = this.add.text(cx + 200, y, rune, {
         fontSize: '28px',
         color: LEGO_COLORS.ORANGE
       }).setOrigin(0.5);
       this.roomContainer.add(runeText);
 
-      const numLabel = this.add.text(GAME_WIDTH - 170, y, '-', {
+      const numLabel = this.add.text(cx + 150, y, '-', {
         fontFamily: '"Rajdhani"',
         fontSize: '28px',
         color: LEGO_COLORS.GREY
@@ -142,7 +142,7 @@ class Chapter3Scene extends Phaser.Scene {
       this.roomContainer.add(numLabel);
 
       if (canInteract) {
-        const hitArea = this.add.rectangle(GAME_WIDTH - 120, y, 80, 40, 0x000000, 0);
+        const hitArea = this.add.rectangle(cx + 200, y, 80, 40, 0x000000, 0);
         hitArea.setInteractive({ useHandCursor: true });
         const idx = i;
         hitArea.on('pointerdown', () => {
@@ -175,7 +175,7 @@ class Chapter3Scene extends Phaser.Scene {
 
     // Register focusables for controller navigation
     const runeFocusables = rightRunes.map((rune, i) => ({
-      element: null, x: GAME_WIDTH - 120, y: 100 + i * 50, callback: () => {
+      element: null, x: cx + 200, y: 100 + i * 50, callback: () => {
         this.runeAnswer[i] = (this.runeAnswer[i] + 1) % (numPairs + 1);
         const val = this.runeAnswer[i] === 0 ? '-' : this.runeAnswer[i].toString();
         this.rightRuneSlots[i].numLabel.setText(val);
@@ -226,7 +226,7 @@ class Chapter3Scene extends Phaser.Scene {
     const totalZones = 8;
 
     for (let i = 0; i < totalZones; i++) {
-      const zx = 100 + (GAME_WIDTH - 200) * (i / (totalZones - 1));
+      const zx = cx - 300 + 600 * (i / (totalZones - 1));
       const zy = cy + 80 + Math.sin(i * 1.5) * 40;
 
       const zone = this.add.graphics();
@@ -267,7 +267,7 @@ class Chapter3Scene extends Phaser.Scene {
     // Register focusables for controller navigation
     const eyeFocusables = [];
     for (let i = 0; i < totalZones; i++) {
-      const zx = 100 + (GAME_WIDTH - 200) * (i / (totalZones - 1));
+      const zx = cx - 300 + 600 * (i / (totalZones - 1));
       const zy = cy + 80 + Math.sin(i * 1.5) * 40;
       eyeFocusables.push({ element: null, x: zx, y: zy, callback: () => {
         if (this.safeZones[i]) return;
@@ -355,14 +355,14 @@ class Chapter3Scene extends Phaser.Scene {
     const shelfY2 = 280;
     const shelfGfx = this.add.graphics();
     shelfGfx.fillStyle(0x4A3520, 1);
-    shelfGfx.fillRect(80, shelfY1 + 70, GAME_WIDTH - 160, 8);
-    shelfGfx.fillRect(80, shelfY2 + 70, GAME_WIDTH - 160, 8);
+    shelfGfx.fillRect(cx - 280, shelfY1 + 70, 560, 8);
+    shelfGfx.fillRect(cx - 280, shelfY2 + 70, 560, 8);
     this.roomContainer.add(shelfGfx);
 
     books.forEach((book, i) => {
       const col = i % 4;
       const row = Math.floor(i / 4);
-      const bx = 110 + col * 110;
+      const bx = cx - 240 + col * 120;
       const by = (row === 0 ? shelfY1 : shelfY2);
 
       const bookGfx = this.add.graphics();
@@ -399,7 +399,7 @@ class Chapter3Scene extends Phaser.Scene {
     const bookFocusables = books.map((book, i) => {
       const col = i % 4;
       const row = Math.floor(i / 4);
-      const bx = 110 + col * 110;
+      const bx = cx - 240 + col * 120;
       const by = (row === 0 ? shelfY1 : shelfY2) + 35;
       return { element: null, x: bx, y: by, callback: () => {
         network.sendPuzzleAction('book_pick', { book: i });
@@ -594,7 +594,7 @@ class Chapter3Scene extends Phaser.Scene {
 
     // Character buttons
     characters.forEach((name, i) => {
-      const bx = 80 + (i % 3) * 140;
+      const bx = cx - 280 + (i % 3) * 180;
       const by = GAME_HEIGHT / 2 + 70 + Math.floor(i / 3) * 50;
 
       const btn = this.add.container(bx, by);
@@ -632,7 +632,7 @@ class Chapter3Scene extends Phaser.Scene {
 
     // Register focusables for controller navigation
     const ringFocusables = characters.map((name, i) => {
-      const bx = 80 + (i % 3) * 140;
+      const bx = cx - 280 + (i % 3) * 180;
       const by = GAME_HEIGHT / 2 + 70 + Math.floor(i / 3) * 50;
       return { element: null, x: bx, y: by, callback: () => {
         this.ringOrder.push(name);

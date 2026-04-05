@@ -141,8 +141,9 @@ class FinaleScene extends Phaser.Scene {
       delay: 1000,
       repeat: 9,
       callback: () => {
+        if (!timerText || !timerText.active) return;
         this.triviaTimer--;
-        if (timerText) timerText.setText(`Time: ${this.triviaTimer}`);
+        timerText.setText(`Time: ${this.triviaTimer}`);
         if (this.triviaTimer <= 0 && !this.triviaLocked) {
           this.triviaLocked = true;
           this.showFeedback('TIME UP!', LEGO_COLORS.RED);
@@ -622,6 +623,7 @@ class FinaleScene extends Phaser.Scene {
       delay: 1000,
       repeat: this.assemblyTimer - 1,
       callback: () => {
+        if (!this.assemblyTimerText || !this.assemblyTimerText.active) return;
         this.assemblyTimer--;
         if (this.assemblyTimerText) {
           this.assemblyTimerText.setText('Time: ' + this.assemblyTimer);
