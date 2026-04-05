@@ -521,12 +521,12 @@ class Chapter1Scene extends Phaser.Scene {
     const cy = GAME_HEIGHT / 2;
     const cols = 4;
     const rows = 3;
-    const cardW = 65;
-    const cardH = 75;
-    const gap = 10;
+    const cardW = 120;
+    const cardH = 80;
+    const gap = 12;
 
-    const setNames = ['Home\nAlone', 'Barad\ndur', 'Alpine\nLodge', 'Tree\nHouse',
-                       'Table\nFootball', 'Flying\nMachine', 'Book\nNook', 'Fashion\nShop'];
+    const setNames = ['Home Alone', 'Barad-dur', 'Alpine Lodge', 'Tree House',
+                       'Table Football', 'Flying Machine', 'Book Nook', 'Fashion Shop'];
     const pairs = setNames.slice(0, (cols * rows) / 2);
     let cards = [...pairs, ...pairs];
 
@@ -548,8 +548,10 @@ class Chapter1Scene extends Phaser.Scene {
       }).setOrigin(0.5)
     );
 
-    const startX = cx - ((cols * (cardW + gap) - gap) / 2) + cardW / 2;
-    const startY = cy - 30;
+    const totalW = cols * (cardW + gap) - gap;
+    const totalH = rows * (cardH + gap) - gap;
+    const startX = cx - totalW / 2 + cardW / 2;
+    const startY = 100 + cardH / 2;
 
     this.cardObjects = cards.map((name, i) => {
       const col = i % cols;
@@ -557,26 +559,35 @@ class Chapter1Scene extends Phaser.Scene {
       const x = startX + col * (cardW + gap);
       const y = startY + row * (cardH + gap);
 
-      // Card back (visible)
+      // Card back (visible) - LEGO brick style
       const back = this.add.graphics();
       back.fillStyle(hexToInt(LEGO_COLORS.RED), 1);
-      back.fillRoundedRect(x - cardW / 2, y - cardH / 2, cardW, cardH, 6);
-      back.fillStyle(hexToInt(LEGO_COLORS.DARK_RED), 1);
-      back.fillCircle(x, y, 10);
+      back.fillRoundedRect(x - cardW / 2, y - cardH / 2, cardW, cardH, 8);
+      back.lineStyle(2, hexToInt(LEGO_COLORS.DARK_RED), 0.6);
+      back.strokeRoundedRect(x - cardW / 2, y - cardH / 2, cardW, cardH, 8);
+      // LEGO studs on card back
+      for (let si = -1; si <= 1; si++) {
+        back.fillStyle(hexToInt(LEGO_COLORS.DARK_RED), 0.7);
+        back.fillCircle(x + si * 25, y, 8);
+      }
       this.roomContainer.add(back);
 
-      // Card front (hidden)
+      // Card front (hidden) - clean white with colored border
       const front = this.add.graphics();
-      front.fillStyle(hexToInt(LEGO_COLORS.WHITE), 1);
-      front.fillRoundedRect(x - cardW / 2, y - cardH / 2, cardW, cardH, 6);
+      front.fillStyle(0xF0F4F8, 1);
+      front.fillRoundedRect(x - cardW / 2, y - cardH / 2, cardW, cardH, 8);
+      front.lineStyle(3, hexToInt(LEGO_COLORS.YELLOW), 0.8);
+      front.strokeRoundedRect(x - cardW / 2, y - cardH / 2, cardW, cardH, 8);
       front.setVisible(false);
       this.roomContainer.add(front);
 
       const label = this.add.text(x, y, name, {
-        fontFamily: '"Rajdhani"',
-        fontSize: '22px',
-        color: LEGO_COLORS.BLACK,
-        align: 'center'
+        fontFamily: FONT_TITLE,
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color: '#1B2A34',
+        align: 'center',
+        wordWrap: { width: cardW - 16 }
       }).setOrigin(0.5).setVisible(false);
       this.roomContainer.add(label);
 
