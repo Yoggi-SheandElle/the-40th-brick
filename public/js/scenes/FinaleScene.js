@@ -347,19 +347,20 @@ class FinaleScene extends Phaser.Scene {
     const correctFinal = options.indexOf(realQuote.text);
 
     this.roomContainer.add(
-      this.add.text(cx, 70, "Which quote is really Ante's?", {
+      this.add.text(cx, 75, "Which quote is really Ante's?", {
         fontFamily: '"Rajdhani"',
-        fontSize: '22px',
+        fontSize: '34px',
+        fontStyle: 'bold',
         color: LEGO_COLORS.BRIGHT_PINK
       }).setOrigin(0.5)
     );
 
     const quoteColors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN, LEGO_COLORS.ORANGE];
     const boxWidth = GAME_WIDTH - 120;        // 1160
-    const boxHeight = 118;                    // tall enough for 3-line wrapped quotes
-    const boxSpacing = 135;                   // vertical gap between boxes
-    const firstBoxY = 110;                    // top of first box (below title at y=70)
-    const textWrapWidth = GAME_WIDTH - 220;   // 1060, wider so quotes need fewer lines
+    const boxHeight = 135;                    // fits 3 lines at 30px + padding
+    const boxSpacing = 148;                   // vertical gap between boxes
+    const firstBoxY = 110;                    // top of first box (below title)
+    const textWrapWidth = GAME_WIDTH - 240;   // 1040, leaves room for number label + padding
 
     options.forEach((quote, i) => {
       const boxTop = firstBoxY + i * boxSpacing;
@@ -367,15 +368,16 @@ class FinaleScene extends Phaser.Scene {
 
       const bg = this.add.graphics();
       bg.fillStyle(0x2A2A3E, 1);
-      bg.fillRoundedRect(60, boxTop, boxWidth, boxHeight, 10);
-      bg.lineStyle(2, hexToInt(quoteColors[i]), 0.6);
-      bg.strokeRoundedRect(60, boxTop, boxWidth, boxHeight, 10);
+      bg.fillRoundedRect(60, boxTop, boxWidth, boxHeight, 12);
+      bg.lineStyle(3, hexToInt(quoteColors[i]), 0.8);
+      bg.strokeRoundedRect(60, boxTop, boxWidth, boxHeight, 12);
       this.roomContainer.add(bg);
 
       this.roomContainer.add(
-        this.add.text(80, boxTop + 12, `${i + 1}.`, {
+        this.add.text(90, boxTop + 14, `${i + 1}.`, {
           fontFamily: '"Rajdhani"',
-          fontSize: '28px',
+          fontSize: '38px',
+          fontStyle: 'bold',
           color: quoteColors[i]
         })
       );
@@ -383,11 +385,12 @@ class FinaleScene extends Phaser.Scene {
       this.roomContainer.add(
         this.add.text(cx, boxCenterY, `"${quote}"`, {
           fontFamily: '"Rajdhani"',
-          fontSize: '20px',
+          fontSize: '30px',
+          fontStyle: 'bold',
           color: LEGO_COLORS.WHITE,
           wordWrap: { width: textWrapWidth },
           align: 'center',
-          lineSpacing: 4
+          lineSpacing: 6
         }).setOrigin(0.5)
       );
 
