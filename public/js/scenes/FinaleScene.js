@@ -57,7 +57,14 @@ class FinaleScene extends Phaser.Scene {
     this.roomContainer.add(introText);
     this.tweens.add({ targets: introText, alpha: 0.8, duration: 500, yoyo: true, hold: 2500 });
 
-    // Mix of fast puzzles from all chapters
+    // Second-to-last room (index 8 / displayed room 39) is Ante's Mega Speed Build,
+    // the gauntlet before the birthday reveal. All other rooms rotate through
+    // the 5 main puzzle types.
+    if (roomIndex === this.totalRooms - 2) {
+      this.createMegaSpeedBuildPuzzle();
+      return;
+    }
+
     const puzzleType = roomIndex % 5;
     switch (puzzleType) {
       case 0: this.createTriviaPuzzle(roomIndex); break;
@@ -65,6 +72,223 @@ class FinaleScene extends Phaser.Scene {
       case 2: this.createQuoteGuessPuzzle(); break;
       case 3: this.createBrickCountPuzzle(roomIndex); break;
       case 4: this.createSetAssemblyPuzzle(roomIndex); break;
+    }
+  }
+
+  // PUZZLE: Ante's request - 100 bricks, click in order, wrong = full restart
+  // 10x10 grid with slight jitter, HUGE "FIND" indicator so she can scan fast
+  createMegaSpeedBuildPuzzle() {
+    const cx = GAME_WIDTH / 2;
+    const TOTAL = 100;
+    const TIME_LIMIT = 75;
+
+    // Title - big and obvious
+    this.roomContainer.add(
+      this.add.text(cx, 82, "ANTE'S GAUNTLET", {
+        fontFamily: '"Rajdhani"',
+        fontSize: '34px',
+        fontStyle: 'bold',
+        color: LEGO_COLORS.YELLOW,
+        stroke: '#000000',
+        strokeThickness: 3
+      }).setOrigin(0.5)
+    );
+    this.roomContainer.add(
+      this.add.text(cx, 110, 'Click bricks 1 to 100 in order. Wrong click = START OVER.', {
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
+        fontStyle: 'bold',
+        color: LEGO_COLORS.CYAN
+      }).setOrigin(0.5)
+    );
+
+    // Grid layout: 10 cols x 10 rows centered, room for HUD at the bottom
+    const cols = 10;
+    const rows = 10;
+    const cellW = 58;
+    const cellH = 50;
+    const gridW = cols * cellW;
+    const gridH = rows * cellH;
+    const gridLeft = (GAME_WIDTH - gridW) / 2;
+    const gridTop = 140;
+
+    this.megaNext = 1;
+    this.megaBricks = [];        // { graphic, label, hitArea, num }
+    this.megaStartTime = this.time.now;
+    this.megaFailed = false;
+
+    // Persistent state holders so we can rebuild on restart
+    const self = this;
+    const brickColors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN, LEGO_COLORS.YELLOW,
+                         LEGO_COLORS.ORANGE, LEGO_COLORS.BRIGHT_PINK, LEGO_COLORS.MEDIUM_LAVENDER,
+                         LEGO_COLORS.BRIGHT_LIGHT_BLUE, LEGO_COLORS.SAND_GREEN, LEGO_COLORS.TAN];
+
+    const buildGrid = () => {
+      // Clear any previous bricks
+      self.megaBricks.forEach(b => {
+        if (b.graphic && b.graphic.active) b.graphic.destroy();
+        if (b.label && b.label.active) b.label.destroy();
+        if (b.hitArea && b.hitArea.active) b.hitArea.destroy();
+      });
+      self.megaBricks = [];
+      self.megaNext = 1;
+
+      // Build a shuffled index list so number 1 isn't always top-left
+      const cellIndices = Array.from({ length: TOTAL }, (_, i) => i);
+      for (let i = cellIndices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cellIndices[i], cellIndices[j]] = [cellIndices[j], cellIndices[i]];
+      }
+
+      for (let num = 1; num <= TOTAL; num++) {
+        const cell = cellIndices[num - 1];
+        const col = cell % cols;
+        const row = Math.floor(cell / cols);
+        // Small jitter so it doesn't look perfectly gridded
+        const jitterX = (Math.random() - 0.5) * 6;
+        const jitterY = (Math.random() - 0.5) * 6;
+        const x = gridLeft + col * cellW + cellW / 2 + jitterX;
+        const y = gridTop + row * cellH + cellH / 2 + jitterY;
+        const color = brickColors[(num - 1) % brickColors.length];
+
+        const brick = self.add.graphics();
+        brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
+        brick.fillRoundedRect(x - 26, y - 18, 52, 36, 6);
+        brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).lighten(18).color, 1);
+        brick.fillCircle(x - 11, y - 20, 6);
+        brick.fillCircle(x + 11, y - 20, 6);
+        self.roomContainer.add(brick);
+
+        const label = self.add.text(x, y, num.toString(), {
+          fontFamily: '"Rajdhani"',
+          fontSize: '22px',
+          fontStyle: 'bold',
+          color: LEGO_COLORS.WHITE,
+          stroke: '#000000',
+          strokeThickness: 4
+        }).setOrigin(0.5);
+        self.roomContainer.add(label);
+
+        const hitArea = self.add.rectangle(x, y, 56, 44, 0x000000, 0);
+        hitArea.setInteractive({ useHandCursor: true });
+        hitArea.on('pointerdown', () => self.handleMegaClick(num));
+        self.roomContainer.add(hitArea);
+
+        self.megaBricks.push({ graphic: brick, label, hitArea, num });
+      }
+
+      // Controller focusables
+      const focusables = self.megaBricks.map(b => ({
+        element: null, x: b.hitArea.x, y: b.hitArea.y,
+        callback: () => self.handleMegaClick(b.num)
+      }));
+      InputSystem.setFocusables(focusables);
+    };
+
+    // HUD: big "FIND: N" target indicator
+    this.megaTargetText = this.add.text(cx - 170, GAME_HEIGHT - 40, 'FIND: 1', {
+      fontFamily: '"Rajdhani"',
+      fontSize: '36px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.YELLOW,
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setOrigin(0.5).setDepth(20);
+    this.roomContainer.add(this.megaTargetText);
+
+    // HUD: progress
+    this.megaProgressText = this.add.text(cx, GAME_HEIGHT - 40, '0 / 100', {
+      fontFamily: '"Rajdhani"',
+      fontSize: '32px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.WHITE,
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setOrigin(0.5).setDepth(20);
+    this.roomContainer.add(this.megaProgressText);
+
+    // HUD: timer
+    this.megaTimer = TIME_LIMIT;
+    this.megaTimerText = this.add.text(cx + 170, GAME_HEIGHT - 40, `${TIME_LIMIT}s`, {
+      fontFamily: '"Rajdhani"',
+      fontSize: '36px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.CYAN,
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setOrigin(0.5).setDepth(20);
+    this.roomContainer.add(this.megaTimerText);
+
+    const startTimer = () => {
+      if (this.megaTimerEvent) this.megaTimerEvent.remove();
+      this.megaTimerEvent = this.time.addEvent({
+        delay: 1000,
+        repeat: TIME_LIMIT - 1,
+        callback: () => {
+          if (this.megaFailed) return;
+          this.megaTimer--;
+          if (this.megaTimerText && this.megaTimerText.active) {
+            this.megaTimerText.setText(`${this.megaTimer}s`);
+            if (this.megaTimer <= 10) this.megaTimerText.setColor(LEGO_COLORS.RED);
+            else this.megaTimerText.setColor(LEGO_COLORS.CYAN);
+          }
+          if (this.megaTimer <= 0) {
+            this.megaFailed = true;
+            this.showFeedback('TIME UP!\nStart over...', LEGO_COLORS.RED, () => this.megaRestart());
+          }
+        }
+      });
+    };
+
+    this.megaRestart = () => {
+      this.megaFailed = false;
+      this.megaTimer = TIME_LIMIT;
+      this.megaStartTime = this.time.now;
+      if (this.megaTargetText && this.megaTargetText.active) this.megaTargetText.setText('FIND: 1');
+      if (this.megaProgressText && this.megaProgressText.active) this.megaProgressText.setText('0 / 100');
+      if (this.megaTimerText && this.megaTimerText.active) {
+        this.megaTimerText.setText(`${TIME_LIMIT}s`);
+        this.megaTimerText.setColor(LEGO_COLORS.CYAN);
+      }
+      buildGrid();
+      startTimer();
+    };
+
+    buildGrid();
+    startTimer();
+  }
+
+  handleMegaClick(num) {
+    if (this.megaFailed) return;
+    if (num === this.megaNext) {
+      // Correct - make this brick vanish
+      const b = this.megaBricks[num - 1];
+      if (b) {
+        if (b.graphic && b.graphic.active) b.graphic.destroy();
+        if (b.label && b.label.active) b.label.destroy();
+        if (b.hitArea && b.hitArea.active) b.hitArea.destroy();
+      }
+      this.megaNext++;
+      if (this.megaProgressText && this.megaProgressText.active) {
+        this.megaProgressText.setText(`${this.megaNext - 1} / 100`);
+      }
+      if (this.megaTargetText && this.megaTargetText.active && this.megaNext <= 100) {
+        this.megaTargetText.setText(`FIND: ${this.megaNext}`);
+      }
+      network.sendPuzzleAction('mega_click', { brick: num });
+
+      if (this.megaNext > 100) {
+        // WIN!
+        this.megaFailed = true; // stops timer
+        const elapsed = Math.round((this.time.now - this.megaStartTime) / 100) / 10;
+        this.showFeedback(`100/100!\nTime: ${elapsed}s`, LEGO_COLORS.GREEN, () => this.nextRoom());
+      }
+    } else {
+      // WRONG - full restart per Ante's request
+      this.megaFailed = true;
+      this.showFeedback(`WRONG! You clicked ${num}, needed ${this.megaNext}\nSTART OVER`, LEGO_COLORS.RED, () => {
+        this.megaRestart();
+      });
     }
   }
 
@@ -125,17 +349,19 @@ class FinaleScene extends Phaser.Scene {
     this.roomContainer.add(
       this.add.text(cx, 80, 'ANTE TRIVIA', {
         fontFamily: '"Rajdhani"',
-        fontSize: '28px',
+        fontSize: '38px',
+        fontStyle: 'bold',
         color: LEGO_COLORS.BRIGHT_PINK
       }).setOrigin(0.5)
     );
 
     this.roomContainer.add(
-      this.add.text(cx, 130, t.q, {
+      this.add.text(cx, 155, t.q, {
         fontFamily: '"Rajdhani"',
-        fontSize: '22px',
+        fontSize: '30px',
+        fontStyle: 'bold',
         color: LEGO_COLORS.WHITE,
-        wordWrap: { width: 600 },
+        wordWrap: { width: 1000 },
         align: 'center'
       }).setOrigin(0.5)
     );
@@ -143,8 +369,8 @@ class FinaleScene extends Phaser.Scene {
     // Timer - 10 seconds to answer
     this.triviaTimer = 10;
     this.triviaLocked = false;
-    const timerText = this.add.text(cx, 165, `Time: ${this.triviaTimer}`, {
-      fontFamily: '"Rajdhani"', fontSize: '28px', color: LEGO_COLORS.YELLOW
+    const timerText = this.add.text(cx, 220, `Time: ${this.triviaTimer}`, {
+      fontFamily: '"Rajdhani"', fontSize: '36px', fontStyle: 'bold', color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5);
     this.roomContainer.add(timerText);
 
@@ -164,21 +390,26 @@ class FinaleScene extends Phaser.Scene {
     });
 
     t.options.forEach((opt, i) => {
-      const bx = cx + (i % 2 === 0 ? -130 : 130);
-      const by = 220 + Math.floor(i / 2) * 70;
+      const bx = cx + (i % 2 === 0 ? -220 : 220);
+      const by = 340 + Math.floor(i / 2) * 110;
 
       const btn = this.add.container(bx, by);
       const colors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN, LEGO_COLORS.ORANGE];
       const bg = this.add.graphics();
       bg.fillStyle(Phaser.Display.Color.HexStringToColor(colors[i]).color, 1);
-      bg.fillRoundedRect(-110, -22, 220, 44, 6);
-      const lbl = this.add.text(0, -2, opt, {
+      bg.fillRoundedRect(-200, -42, 400, 84, 10);
+      bg.lineStyle(3, 0xffffff, 0.3);
+      bg.strokeRoundedRect(-200, -42, 400, 84, 10);
+      const lbl = this.add.text(0, 0, opt, {
         fontFamily: '"Rajdhani"',
-        fontSize: '22px',
-        color: LEGO_COLORS.WHITE
+        fontSize: '30px',
+        fontStyle: 'bold',
+        color: LEGO_COLORS.WHITE,
+        wordWrap: { width: 380 },
+        align: 'center'
       }).setOrigin(0.5);
       btn.add([bg, lbl]);
-      btn.setSize(220, 44);
+      btn.setSize(400, 84);
       btn.setInteractive({ useHandCursor: true });
       btn.on('pointerdown', () => {
         if (this.triviaLocked) return;
@@ -197,8 +428,8 @@ class FinaleScene extends Phaser.Scene {
 
     // Register focusables for controller navigation
     const triviaFocusables = t.options.map((opt, i) => {
-      const bx = cx + (i % 2 === 0 ? -130 : 130);
-      const by = 220 + Math.floor(i / 2) * 70;
+      const bx = cx + (i % 2 === 0 ? -220 : 220);
+      const by = 340 + Math.floor(i / 2) * 110;
       return { element: null, x: bx, y: by, callback: () => {
         if (this.triviaLocked) return;
         network.sendPuzzleAction('trivia_answer', { answer: i });
@@ -220,12 +451,13 @@ class FinaleScene extends Phaser.Scene {
     const cx = GAME_WIDTH / 2;
 
     this.roomContainer.add(
-      this.add.text(cx, 70, 'SPEED BUILD!\nClick bricks 1-12 in order!', {
+      this.add.text(cx, 78, 'SPEED BUILD!\nClick bricks 1-12 in order!', {
         fontFamily: '"Rajdhani"',
-        fontSize: '22px',
+        fontSize: '30px',
+        fontStyle: 'bold',
         color: LEGO_COLORS.YELLOW,
         align: 'center',
-        lineSpacing: 6
+        lineSpacing: 8
       }).setOrigin(0.5)
     );
 
@@ -248,28 +480,29 @@ class FinaleScene extends Phaser.Scene {
 
       const brick = this.add.graphics();
       brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
-      brick.fillRoundedRect(pos.x - 22, pos.y - 15, 44, 30, 4);
+      brick.fillRoundedRect(pos.x - 38, pos.y - 26, 76, 52, 6);
       brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).lighten(15).color, 1);
-      brick.fillCircle(pos.x - 8, pos.y - 17, 5);
-      brick.fillCircle(pos.x + 8, pos.y - 17, 5);
+      brick.fillCircle(pos.x - 14, pos.y - 28, 7);
+      brick.fillCircle(pos.x + 14, pos.y - 28, 7);
       this.roomContainer.add(brick);
 
       const label = this.add.text(pos.x, pos.y, num.toString(), {
         fontFamily: '"Rajdhani"',
-        fontSize: '28px',
+        fontSize: '40px',
+        fontStyle: 'bold',
         color: LEGO_COLORS.WHITE,
         stroke: '#000000',
-        strokeThickness: 2
+        strokeThickness: 4
       }).setOrigin(0.5);
       this.roomContainer.add(label);
 
-      const hitArea = this.add.rectangle(pos.x, pos.y, 44, 30, 0x000000, 0);
+      const hitArea = this.add.rectangle(pos.x, pos.y, 80, 60, 0x000000, 0);
       hitArea.setInteractive({ useHandCursor: true });
       hitArea.on('pointerdown', () => {
         if (num === this.buildNext) {
           brick.clear();
           brick.fillStyle(hexToInt(LEGO_COLORS.GREEN), 0.5);
-          brick.fillRoundedRect(pos.x - 22, pos.y - 15, 44, 30, 4);
+          brick.fillRoundedRect(pos.x - 38, pos.y - 26, 76, 52, 6);
           label.setColor(LEGO_COLORS.GREEN);
           label.setText('OK');
           this.buildNext++;
@@ -299,17 +532,20 @@ class FinaleScene extends Phaser.Scene {
     InputSystem.setFocusables(speedFocusables);
 
     // Timer
-    this.buildTimer = 10;
-    this.timerText = this.add.text(cx, GAME_HEIGHT - 50, `Time: ${this.buildTimer}`, {
+    this.buildTimer = 15;
+    this.timerText = this.add.text(cx, GAME_HEIGHT - 40, `Time: ${this.buildTimer}`, {
       fontFamily: '"Rajdhani"',
-      fontSize: '28px',
-      color: LEGO_COLORS.YELLOW
+      fontSize: '36px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.YELLOW,
+      stroke: '#000000',
+      strokeThickness: 3
     }).setOrigin(0.5);
     this.roomContainer.add(this.timerText);
 
     this.time.addEvent({
       delay: 1000,
-      repeat: 9,
+      repeat: 14,
       callback: () => {
         this.buildTimer--;
         if (this.timerText) this.timerText.setText(`Time: ${this.buildTimer}`);
@@ -429,9 +665,10 @@ class FinaleScene extends Phaser.Scene {
     const targetCount = 10 + Math.floor(Math.random() * 11);
 
     this.roomContainer.add(
-      this.add.text(cx, 70, 'How many bricks do you count?', {
+      this.add.text(cx, 80, 'How many bricks do you count?', {
         fontFamily: '"Rajdhani"',
-        fontSize: '22px',
+        fontSize: '34px',
+        fontStyle: 'bold',
         color: LEGO_COLORS.YELLOW
       }).setOrigin(0.5)
     );
@@ -440,16 +677,17 @@ class FinaleScene extends Phaser.Scene {
     const colors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN,
                     LEGO_COLORS.YELLOW, LEGO_COLORS.ORANGE, LEGO_COLORS.BRIGHT_PINK];
     for (let i = 0; i < targetCount; i++) {
-      const bx = 70 + Math.random() * (GAME_WIDTH - 140);
-      const by = 110 + Math.random() * 260;
+      const bx = 100 + Math.random() * (GAME_WIDTH - 200);
+      const by = 150 + Math.random() * 360;
       const color = colors[Math.floor(Math.random() * colors.length)];
       const angle = (Math.random() - 0.5) * 30; // slight rotation for overlap confusion
 
       const brick = this.add.graphics();
       brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 0.85 + Math.random() * 0.15);
-      brick.fillRoundedRect(bx - 15, by - 10, 30, 20, 3);
+      brick.fillRoundedRect(bx - 28, by - 18, 56, 36, 5);
       brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).lighten(15).color, 1);
-      brick.fillCircle(bx, by - 12, 4);
+      brick.fillCircle(bx - 10, by - 20, 6);
+      brick.fillCircle(bx + 10, by - 20, 6);
       brick.setAngle(angle);
       this.roomContainer.add(brick);
     }
@@ -459,20 +697,23 @@ class FinaleScene extends Phaser.Scene {
       .sort(() => Math.random() - 0.5);
 
     options.forEach((num, i) => {
-      const bx = cx - 150 + i * 100;
-      const by = GAME_HEIGHT - 100;
+      const bx = cx - 270 + i * 180;
+      const by = GAME_HEIGHT - 80;
 
       const btn = this.add.container(bx, by);
       const bg = this.add.graphics();
       bg.fillStyle(hexToInt(LEGO_COLORS.BLUE), 1);
-      bg.fillRoundedRect(-30, -18, 60, 36, 4);
-      const lbl = this.add.text(0, -2, num.toString(), {
+      bg.fillRoundedRect(-70, -40, 140, 80, 10);
+      bg.lineStyle(3, 0xffffff, 0.4);
+      bg.strokeRoundedRect(-70, -40, 140, 80, 10);
+      const lbl = this.add.text(0, 0, num.toString(), {
         fontFamily: '"Rajdhani"',
-        fontSize: '28px',
+        fontSize: '48px',
+        fontStyle: 'bold',
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5);
       btn.add([bg, lbl]);
-      btn.setSize(60, 36);
+      btn.setSize(140, 80);
       btn.setInteractive({ useHandCursor: true });
       btn.on('pointerdown', () => {
         network.sendPuzzleAction('count_answer', { answer: num });
@@ -487,8 +728,8 @@ class FinaleScene extends Phaser.Scene {
 
     // Register focusables for controller navigation
     const countFocusables = options.map((num, i) => {
-      const bx = cx - 150 + i * 100;
-      const by = GAME_HEIGHT - 100;
+      const bx = cx - 270 + i * 180;
+      const by = GAME_HEIGHT - 80;
       return { element: null, x: bx, y: by, callback: () => {
         network.sendPuzzleAction('count_answer', { answer: num });
         if (num === targetCount) {
@@ -518,7 +759,9 @@ class FinaleScene extends Phaser.Scene {
       { name: 'Barad-dur', year: 2024, theme: 'Icons', pieces: 8,
         parts: ['Tower base', 'Orc forge', "Sauron's library", 'Prison cell', 'Spiral staircase', 'Upper tower', 'Eye of Sauron', 'Sauron minifig'] },
       { name: "Da Vinci's Flying Machine", year: 2025, theme: 'Icons', pieces: 7,
-        parts: ['Wing frame L', 'Wing frame R', 'String mechanism', 'Pilot seat', 'Tail section', 'Display stand', 'Crank handle'] }
+        parts: ['Wing frame L', 'Wing frame R', 'String mechanism', 'Pilot seat', 'Tail section', 'Display stand', 'Crank handle'] },
+      { name: 'Sherlock Holmes Book Nook', year: 2025, theme: 'Icons', pieces: 8,
+        parts: ['Book spine frame', '221B apartment', 'Fireplace', 'Violin', 'Clue board', 'Holmes minifig', 'Watson minifig', 'Moriarty minifig'] }
     ];
 
     const setData = sets[roomIndex % sets.length];
@@ -536,40 +779,40 @@ class FinaleScene extends Phaser.Scene {
     this.assemblyTimer = 20;
 
     this.roomContainer.add(
-      this.add.text(cx, 58, 'ASSEMBLE: ' + setData.name.toUpperCase(), {
-        fontFamily: FONT_TITLE, fontSize: '16px', fontStyle: 'bold',
+      this.add.text(cx, 86, 'ASSEMBLE: ' + setData.name.toUpperCase(), {
+        fontFamily: FONT_TITLE, fontSize: '30px', fontStyle: 'bold',
         color: LEGO_COLORS.YELLOW
       }).setOrigin(0.5)
     );
 
     this.roomContainer.add(
-      this.add.text(cx, 78, setData.theme + ' (' + setData.year + ') - ' + numParts + ' sections', {
-        fontFamily: FONT_BODY, fontSize: '13px', color: '#8896AA'
+      this.add.text(cx, 122, setData.theme + ' (' + setData.year + ') - ' + numParts + ' sections', {
+        fontFamily: FONT_BODY, fontSize: '22px', color: '#BBCCDD'
       }).setOrigin(0.5)
     );
 
     this.roomContainer.add(
-      this.add.text(cx, 98, 'Tap parts in the correct build order!', {
-        fontFamily: FONT_BODY, fontSize: '14px', color: LEGO_COLORS.CYAN
+      this.add.text(cx, 152, 'Tap parts in the correct build order!', {
+        fontFamily: FONT_BODY, fontSize: '24px', fontStyle: 'bold', color: LEGO_COLORS.CYAN
       }).setOrigin(0.5)
     );
 
     // Assembly progress display
-    this.assemblyProgress = this.add.text(cx, 120, '', {
-      fontFamily: FONT_BODY, fontSize: '13px', color: LEGO_COLORS.GREEN,
-      align: 'center', wordWrap: { width: 500 }
+    this.assemblyProgress = this.add.text(cx, 188, '', {
+      fontFamily: FONT_BODY, fontSize: '22px', fontStyle: 'bold', color: LEGO_COLORS.GREEN,
+      align: 'center', wordWrap: { width: 1100 }
     }).setOrigin(0.5);
     this.roomContainer.add(this.assemblyProgress);
 
     // Part buttons (shuffled)
     const cols = Math.min(4, numParts);
     const rows = Math.ceil(numParts / cols);
-    const btnW = 180;
-    const btnH = 40;
-    const gapX = 12;
-    const gapY = 10;
+    const btnW = 260;
+    const btnH = 72;
+    const gapX = 20;
+    const gapY = 16;
     const startX = cx - ((cols * (btnW + gapX) - gapX) / 2) + btnW / 2;
-    const startY = 155;
+    const startY = 250;
     const focusItems = [];
 
     shuffled.forEach((part, i) => {
@@ -581,11 +824,12 @@ class FinaleScene extends Phaser.Scene {
       const btn = this.add.container(bx, by);
       const bg = this.add.graphics();
       bg.fillStyle(0x1A2030, 1);
-      bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-      bg.lineStyle(1, hexToInt(LEGO_COLORS.CYAN), 0.3);
-      bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 10);
+      bg.lineStyle(2, hexToInt(LEGO_COLORS.CYAN), 0.5);
+      bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 10);
       const lbl = this.add.text(0, 0, part, {
-        fontFamily: FONT_BODY, fontSize: '13px', color: '#D0D8E8'
+        fontFamily: FONT_BODY, fontSize: '22px', fontStyle: 'bold', color: '#E8EEFA',
+        wordWrap: { width: btnW - 20 }, align: 'center'
       }).setOrigin(0.5);
       btn.add([bg, lbl]);
       btn.setSize(btnW, btnH);
@@ -599,7 +843,9 @@ class FinaleScene extends Phaser.Scene {
           this.assemblyOrder.push(part);
           bg.clear();
           bg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 0.3);
-          bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+          bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 10);
+          bg.lineStyle(2, hexToInt(LEGO_COLORS.GREEN), 0.8);
+          bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 10);
           lbl.setColor(LEGO_COLORS.GREEN);
           btn.disableInteractive();
           InputSystem.vibrate(50, 0.2, 0.3);
@@ -616,18 +862,18 @@ class FinaleScene extends Phaser.Scene {
         } else {
           // Wrong order
           bg.clear();
-          bg.fillStyle(hexToInt(LEGO_COLORS.RED), 0.2);
-          bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-          bg.lineStyle(1, hexToInt(LEGO_COLORS.RED), 0.5);
-          bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+          bg.fillStyle(hexToInt(LEGO_COLORS.RED), 0.35);
+          bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 10);
+          bg.lineStyle(2, hexToInt(LEGO_COLORS.RED), 0.8);
+          bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 10);
           InputSystem.vibrate(100, 0.4, 0.6);
           this.time.delayedCall(500, () => {
             bg.clear();
             bg.fillStyle(0x1A2030, 1);
-            bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-            bg.lineStyle(1, hexToInt(LEGO_COLORS.CYAN), 0.3);
-            bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-            lbl.setColor('#D0D8E8');
+            bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 10);
+            bg.lineStyle(2, hexToInt(LEGO_COLORS.CYAN), 0.5);
+            bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 10);
+            lbl.setColor('#E8EEFA');
           });
         }
       });
@@ -637,7 +883,8 @@ class FinaleScene extends Phaser.Scene {
 
     // Timer
     this.assemblyTimerText = this.add.text(cx, GAME_HEIGHT - 40, 'Time: ' + this.assemblyTimer, {
-      fontFamily: FONT_MONO, fontSize: '14px', color: LEGO_COLORS.YELLOW
+      fontFamily: FONT_MONO, fontSize: '32px', fontStyle: 'bold', color: LEGO_COLORS.YELLOW,
+      stroke: '#000000', strokeThickness: 3
     }).setOrigin(0.5);
     this.roomContainer.add(this.assemblyTimerText);
 
@@ -817,16 +1064,23 @@ class FinaleScene extends Phaser.Scene {
 
   showFeedback(msg, color, onComplete) {
     const cx = GAME_WIDTH / 2;
+    // Dim background so the message pops off the busy puzzle
+    const bg = this.add.rectangle(cx, GAME_HEIGHT / 2, GAME_WIDTH, 180, 0x000000, 0.78)
+      .setDepth(99);
     const text = this.add.text(cx, GAME_HEIGHT / 2, msg, {
       fontFamily: '"Rajdhani"',
-      fontSize: '22px',
+      fontSize: '44px',
+      fontStyle: 'bold',
       color: color,
+      align: 'center',
       stroke: '#000000',
-      strokeThickness: 3
+      strokeThickness: 5,
+      lineSpacing: 8
     }).setOrigin(0.5).setDepth(100);
 
-    this.time.delayedCall(1200, () => {
-      text.destroy();
+    this.time.delayedCall(1400, () => {
+      if (bg.active) bg.destroy();
+      if (text.active) text.destroy();
       if (onComplete) onComplete();
     });
   }
