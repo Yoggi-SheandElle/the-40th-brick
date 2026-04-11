@@ -355,18 +355,25 @@ class FinaleScene extends Phaser.Scene {
     );
 
     const quoteColors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN, LEGO_COLORS.ORANGE];
+    const boxWidth = GAME_WIDTH - 120;        // 1160
+    const boxHeight = 118;                    // tall enough for 3-line wrapped quotes
+    const boxSpacing = 135;                   // vertical gap between boxes
+    const firstBoxY = 110;                    // top of first box (below title at y=70)
+    const textWrapWidth = GAME_WIDTH - 220;   // 1060, wider so quotes need fewer lines
+
     options.forEach((quote, i) => {
-      const by = 120 + i * 95;
+      const boxTop = firstBoxY + i * boxSpacing;
+      const boxCenterY = boxTop + boxHeight / 2;
 
       const bg = this.add.graphics();
       bg.fillStyle(0x2A2A3E, 1);
-      bg.fillRoundedRect(60, by - 25, GAME_WIDTH - 120, 70, 8);
+      bg.fillRoundedRect(60, boxTop, boxWidth, boxHeight, 10);
       bg.lineStyle(2, hexToInt(quoteColors[i]), 0.6);
-      bg.strokeRoundedRect(60, by - 25, GAME_WIDTH - 120, 70, 8);
+      bg.strokeRoundedRect(60, boxTop, boxWidth, boxHeight, 10);
       this.roomContainer.add(bg);
 
       this.roomContainer.add(
-        this.add.text(80, by - 10, `${i + 1}.`, {
+        this.add.text(80, boxTop + 12, `${i + 1}.`, {
           fontFamily: '"Rajdhani"',
           fontSize: '28px',
           color: quoteColors[i]
@@ -374,17 +381,18 @@ class FinaleScene extends Phaser.Scene {
       );
 
       this.roomContainer.add(
-        this.add.text(cx, by + 5, `"${quote}"`, {
+        this.add.text(cx, boxCenterY, `"${quote}"`, {
           fontFamily: '"Rajdhani"',
-          fontSize: '22px',
+          fontSize: '20px',
           color: LEGO_COLORS.WHITE,
-          wordWrap: { width: 500 },
+          wordWrap: { width: textWrapWidth },
           align: 'center',
-          lineSpacing: 5
+          lineSpacing: 4
         }).setOrigin(0.5)
       );
 
-      const hitArea = this.add.rectangle(cx, by + 5, GAME_WIDTH - 120, 70, 0x000000, 0);
+      // Hit area covers the ENTIRE visual box so multi-line quotes stay clickable
+      const hitArea = this.add.rectangle(cx, boxCenterY, boxWidth, boxHeight, 0x000000, 0);
       hitArea.setInteractive({ useHandCursor: true });
       hitArea.on('pointerdown', () => {
         network.sendPuzzleAction('quote_guess', { choice: i });
@@ -399,8 +407,8 @@ class FinaleScene extends Phaser.Scene {
 
     // Register focusables for controller navigation
     const quoteFocusables = options.map((quote, i) => {
-      const by = 120 + i * 95;
-      return { element: null, x: cx, y: by + 5, callback: () => {
+      const boxCenterY = firstBoxY + i * boxSpacing + boxHeight / 2;
+      return { element: null, x: cx, y: boxCenterY, callback: () => {
         network.sendPuzzleAction('quote_guess', { choice: i });
         if (i === correctFinal) {
           this.showFeedback(`YES! - ${realQuote.source}`, LEGO_COLORS.GREEN, () => this.nextRoom());
