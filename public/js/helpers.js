@@ -1,82 +1,91 @@
-// Shared text style helpers - Futuristic theme
+// Shared text style helpers - Futuristic theme. Sizes tuned for 75" TV
+// at couch distance: anything below ~22px disappears.
 const TEXT_STYLES = {
   title: {
     fontFamily: FONT_TITLE,
-    fontSize: '28px',
+    fontSize: '38px',
     fontStyle: 'bold',
     color: LEGO_COLORS.CYAN,
     stroke: '#000000',
-    strokeThickness: 1
+    strokeThickness: 2
   },
   subtitle: {
     fontFamily: FONT_BODY,
-    fontSize: '16px',
-    color: '#B0BCCC',
-    lineSpacing: 6
+    fontSize: '26px',
+    fontStyle: 'bold',
+    color: '#D0DCEC',
+    lineSpacing: 8
   },
   body: {
     fontFamily: FONT_BODY,
-    fontSize: '16px',
-    color: '#D0D8E8',
+    fontSize: '22px',
+    fontStyle: 'bold',
+    color: '#E0E8F8',
     lineSpacing: 6,
-    wordWrap: { width: 600 },
+    wordWrap: { width: 1000 },
     align: 'center'
   },
   small: {
     fontFamily: FONT_MONO,
-    fontSize: '11px',
+    fontSize: '20px',
     color: LEGO_COLORS.GREY,
     letterSpacing: 2
   },
   label: {
     fontFamily: FONT_MONO,
-    fontSize: '12px',
+    fontSize: '22px',
     fontStyle: 'bold',
     color: LEGO_COLORS.CYAN,
     letterSpacing: 1
   },
   quote: {
     fontFamily: FONT_BODY,
-    fontSize: '16px',
+    fontSize: '24px',
     color: LEGO_COLORS.YELLOW,
     fontStyle: 'italic',
-    wordWrap: { width: 600 },
+    wordWrap: { width: 1100 },
     align: 'center',
     lineSpacing: 6
   },
   hud: {
     fontFamily: FONT_MONO,
-    fontSize: '14px',
-    color: LEGO_COLORS.GREY
+    fontSize: '24px',
+    fontStyle: 'bold',
+    color: LEGO_COLORS.WHITE
   },
   success: {
     fontFamily: FONT_TITLE,
-    fontSize: '32px',
+    fontSize: '44px',
     fontStyle: 'bold',
-    color: LEGO_COLORS.GREEN
+    color: LEGO_COLORS.GREEN,
+    stroke: '#000000',
+    strokeThickness: 4
   },
   error: {
     fontFamily: FONT_TITLE,
-    fontSize: '22px',
+    fontSize: '32px',
     fontStyle: 'bold',
-    color: LEGO_COLORS.RED
+    color: LEGO_COLORS.RED,
+    stroke: '#000000',
+    strokeThickness: 3
   },
   button: {
     fontFamily: FONT_TITLE,
-    fontSize: '18px',
+    fontSize: '26px',
     fontStyle: 'bold',
     color: '#FFFFFF',
     letterSpacing: 1
   },
   room: {
     fontFamily: FONT_TITLE,
-    fontSize: '28px',
+    fontSize: '36px',
     fontStyle: 'bold',
     color: LEGO_COLORS.WHITE
   },
   chapter: {
     fontFamily: FONT_MONO,
-    fontSize: '13px',
+    fontSize: '22px',
+    fontStyle: 'bold',
     color: LEGO_COLORS.CYAN,
     letterSpacing: 3
   }
@@ -123,29 +132,34 @@ function drawGridBg(scene) {
   return gfx;
 }
 
-// Draw a quote box at the bottom of a scene
+// Draw a quote box at the bottom of a scene. Tall enough for a wrapped quote
+// at TV-readable size and a bigger source line.
 function drawQuoteBox(scene, container, era) {
   const cx = GAME_WIDTH / 2;
   const quote = getRandomQuote(era);
+  const boxH = 110;
+  const boxTop = GAME_HEIGHT - boxH - 8;
 
   const bg = scene.add.graphics();
-  bg.fillStyle(0x131824, 0.85);
-  bg.fillRoundedRect(40, GAME_HEIGHT - 65, GAME_WIDTH - 80, 55, 8);
-  bg.lineStyle(1, 0x00D4FF, 0.12);
-  bg.strokeRoundedRect(40, GAME_HEIGHT - 65, GAME_WIDTH - 80, 55, 8);
+  bg.fillStyle(0x131824, 0.92);
+  bg.fillRoundedRect(40, boxTop, GAME_WIDTH - 80, boxH, 12);
+  bg.lineStyle(2, 0x00D4FF, 0.25);
+  bg.strokeRoundedRect(40, boxTop, GAME_WIDTH - 80, boxH, 12);
   container.add(bg);
 
   container.add(
-    scene.add.text(cx, GAME_HEIGHT - 44, '"' + quote.text + '"', {
+    scene.add.text(cx, boxTop + 38, '"' + quote.text + '"', {
       ...TEXT_STYLES.quote,
-      fontSize: '16px'
+      fontSize: '22px',
+      wordWrap: { width: GAME_WIDTH - 140 }
     }).setOrigin(0.5)
   );
 
   container.add(
-    scene.add.text(cx, GAME_HEIGHT - 22, '- Antica Bracanov, ' + quote.source, {
+    scene.add.text(cx, boxTop + boxH - 22, '- Antica Bracanov, ' + quote.source, {
       ...TEXT_STYLES.small,
-      color: LEGO_COLORS.GREY
+      fontSize: '18px',
+      color: '#A0A8B8'
     }).setOrigin(0.5)
   );
 }

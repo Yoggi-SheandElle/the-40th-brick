@@ -52,7 +52,7 @@ class FinaleScene extends Phaser.Scene {
                         'The legacy continues', 'Almost there...', 'The final brick'];
     const introText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 20,
       milestones[roomIndex] || 'A milestone in the journey', {
-      fontFamily: FONT_BODY, fontSize: '13px', color: LEGO_COLORS.YELLOW, fontStyle: 'italic'
+      fontFamily: FONT_BODY, fontSize: '20px', fontStyle: 'italic', color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.roomContainer.add(introText);
     this.tweens.add({ targets: introText, alpha: 0.8, duration: 500, yoyo: true, hold: 2500 });
@@ -673,21 +673,24 @@ class FinaleScene extends Phaser.Scene {
       }).setOrigin(0.5)
     );
 
-    // Scatter bricks with overlapping for difficulty
+    // Scatter bricks with overlapping for difficulty.
+    // Draw each brick at LOCAL (0,0) and position the Graphics object via x/y so
+    // setAngle rotates around the brick centre instead of the canvas origin.
     const colors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN,
                     LEGO_COLORS.YELLOW, LEGO_COLORS.ORANGE, LEGO_COLORS.BRIGHT_PINK];
     for (let i = 0; i < targetCount; i++) {
-      const bx = 100 + Math.random() * (GAME_WIDTH - 200);
-      const by = 150 + Math.random() * 360;
+      const bx = 120 + Math.random() * (GAME_WIDTH - 240);
+      const by = 170 + Math.random() * 340;
       const color = colors[Math.floor(Math.random() * colors.length)];
-      const angle = (Math.random() - 0.5) * 30; // slight rotation for overlap confusion
+      const angle = (Math.random() - 0.5) * 30;
 
       const brick = this.add.graphics();
       brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 0.85 + Math.random() * 0.15);
-      brick.fillRoundedRect(bx - 28, by - 18, 56, 36, 5);
+      brick.fillRoundedRect(-28, -18, 56, 36, 5);
       brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).lighten(15).color, 1);
-      brick.fillCircle(bx - 10, by - 20, 6);
-      brick.fillCircle(bx + 10, by - 20, 6);
+      brick.fillCircle(-10, -20, 6);
+      brick.fillCircle(10, -20, 6);
+      brick.setPosition(bx, by);
       brick.setAngle(angle);
       this.roomContainer.add(brick);
     }

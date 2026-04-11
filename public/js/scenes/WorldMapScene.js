@@ -102,50 +102,51 @@ class WorldMapScene extends Phaser.Scene {
     divGfx.lineStyle(2, hexToInt(LEGO_COLORS.YELLOW), 0.3);
     divGfx.lineBetween(dividerX, lineY - 80, dividerX, lineY + 80);
 
-    this.add.text(dividerX, lineY - 95, 'PERSONAL', {
+    this.add.text(dividerX, lineY - 110, 'PERSONAL', {
       fontFamily: FONT_MONO,
-      fontSize: '8px',
+      fontSize: '20px',
       fontStyle: 'bold',
       color: LEGO_COLORS.YELLOW,
-      letterSpacing: 2
-    }).setOrigin(0.5).setAlpha(0.5);
+      letterSpacing: 3
+    }).setOrigin(0.5).setAlpha(0.7);
 
-    this.add.text(dividerX, lineY + 95, 'Only Ante can pass', {
+    this.add.text(dividerX, lineY + 110, 'Only Ante can pass', {
       fontFamily: FONT_BODY,
-      fontSize: '10px',
-      color: '#5A6A7A',
+      fontSize: '20px',
+      color: '#8895A6',
       fontStyle: 'italic'
-    }).setOrigin(0.5).setAlpha(0.4);
+    }).setOrigin(0.5).setAlpha(0.7);
 
     // Progress section
     const completedRooms = SaveManager.getProgress().solved;
     const pct = Math.round((completedRooms / 40) * 100);
 
-    this.add.text(cx, GAME_HEIGHT - 75, completedRooms + '/40 Bricks Collected', {
+    this.add.text(cx, GAME_HEIGHT - 90, completedRooms + '/40 Bricks Collected', {
       fontFamily: FONT_TITLE,
-      fontSize: '13px',
+      fontSize: '28px',
       fontStyle: 'bold',
       color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5);
 
     // Progress bar
-    const barW = 400;
+    const barW = 600;
     const barBg = this.add.graphics();
     barBg.fillStyle(0x1A2030, 1);
-    barBg.fillRoundedRect(cx - barW / 2, GAME_HEIGHT - 50, barW, 14, 4);
-    barBg.lineStyle(1, 0x00D4FF, 0.1);
-    barBg.strokeRoundedRect(cx - barW / 2, GAME_HEIGHT - 50, barW, 14, 4);
+    barBg.fillRoundedRect(cx - barW / 2, GAME_HEIGHT - 55, barW, 22, 6);
+    barBg.lineStyle(2, 0x00D4FF, 0.25);
+    barBg.strokeRoundedRect(cx - barW / 2, GAME_HEIGHT - 55, barW, 22, 6);
 
     if (completedRooms > 0) {
       const fillW = barW * (completedRooms / 40);
-      barBg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 0.8);
-      barBg.fillRoundedRect(cx - barW / 2 + 1, GAME_HEIGHT - 49, fillW - 2, 12, 3);
+      barBg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 0.85);
+      barBg.fillRoundedRect(cx - barW / 2 + 2, GAME_HEIGHT - 53, fillW - 4, 18, 5);
     }
 
-    this.add.text(cx, GAME_HEIGHT - 27, pct + '% Complete', {
+    this.add.text(cx, GAME_HEIGHT - 22, pct + '% Complete', {
       fontFamily: FONT_MONO,
-      fontSize: '8px',
-      color: '#5A6A7A',
+      fontSize: '20px',
+      fontStyle: 'bold',
+      color: '#8895A6',
       letterSpacing: 1
     }).setOrigin(0.5);
 
@@ -195,49 +196,53 @@ class WorldMapScene extends Phaser.Scene {
     gfx.fillCircle(x - 1, y - 19, 2);
 
     // Number
-    this.add.text(x, y + 2, chapter.num.toString(), {
+    this.add.text(x, y + 4, chapter.num.toString(), {
       fontFamily: FONT_TITLE,
+      fontSize: '36px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.WHITE,
+      stroke: '#000000',
+      strokeThickness: 3
+    }).setOrigin(0.5).setAlpha(alpha);
+
+    // Title
+    this.add.text(x, y - 90, chapter.title, {
+      fontFamily: FONT_TITLE,
+      fontSize: '20px',
+      fontStyle: 'bold',
+      color: chapter.color,
+      align: 'center',
+      wordWrap: { width: 220 }
+    }).setOrigin(0.5).setAlpha(alpha);
+
+    // Subtitle
+    this.add.text(x, y - 65, chapter.subtitle, {
+      fontFamily: FONT_BODY,
+      fontSize: '20px',
+      color: '#9AA8B8'
+    }).setOrigin(0.5).setAlpha(alpha);
+
+    // Years
+    this.add.text(x, y + 60, chapter.years, {
+      fontFamily: FONT_MONO,
       fontSize: '20px',
       fontStyle: 'bold',
       color: LEGO_COLORS.WHITE
     }).setOrigin(0.5).setAlpha(alpha);
 
-    // Title
-    this.add.text(x, y - 60, chapter.title, {
-      fontFamily: FONT_TITLE,
-      fontSize: '9px',
-      fontStyle: 'bold',
-      color: chapter.color,
-      align: 'center',
-      wordWrap: { width: 160 }
-    }).setOrigin(0.5).setAlpha(alpha);
-
-    // Subtitle
-    this.add.text(x, y - 45, chapter.subtitle, {
-      fontFamily: FONT_BODY,
-      fontSize: '11px',
-      color: '#7A8A9A'
-    }).setOrigin(0.5).setAlpha(alpha);
-
-    // Years
-    this.add.text(x, y + 45, chapter.years, {
-      fontFamily: FONT_MONO,
-      fontSize: '9px',
-      color: LEGO_COLORS.WHITE
-    }).setOrigin(0.5).setAlpha(alpha);
-
     // Rooms
-    this.add.text(x, y + 60, chapter.rooms, {
+    this.add.text(x, y + 84, chapter.rooms, {
       fontFamily: FONT_MONO,
-      fontSize: '7px',
-      color: '#5A6A7A',
+      fontSize: '18px',
+      color: '#8895A6',
       letterSpacing: 1
     }).setOrigin(0.5).setAlpha(alpha);
 
     if (!chapter.unlocked) {
-      this.add.text(x, y + 78, 'LOCKED', {
+      this.add.text(x, y + 110, 'LOCKED', {
         fontFamily: FONT_MONO,
-        fontSize: '8px',
+        fontSize: '20px',
+        fontStyle: 'bold',
         color: LEGO_COLORS.RED
       }).setOrigin(0.5);
       return null;
@@ -269,11 +274,13 @@ class WorldMapScene extends Phaser.Scene {
         gfx.fillCircle(x, y - 18, 6);
       });
 
-      this.add.text(x, y + 78, 'PLAY', {
+      this.add.text(x, y + 110, 'PLAY', {
         fontFamily: FONT_MONO,
-        fontSize: '9px',
+        fontSize: '24px',
         fontStyle: 'bold',
-        color: LEGO_COLORS.GREEN
+        color: LEGO_COLORS.GREEN,
+        stroke: '#000000',
+        strokeThickness: 2
       }).setOrigin(0.5);
 
       return { hitArea };

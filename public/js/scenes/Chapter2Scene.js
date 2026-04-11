@@ -52,7 +52,7 @@ class Chapter2Scene extends Phaser.Scene {
                       'The Bathroom', 'Living Room', 'The Garage', 'Backyard', 'Grand Finale'];
     const introText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 20,
       'Celebrating Ante\'s work on ' + (setNames[roomIndex] || 'LEGO Friends'), {
-      fontFamily: FONT_BODY, fontSize: '12px', color: '#5A6A7A', fontStyle: 'italic'
+      fontFamily: FONT_BODY, fontSize: '20px', fontStyle: 'italic', color: '#8895A6'
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.roomContainer.add(introText);
     this.tweens.add({ targets: introText, alpha: 0.7, duration: 500, yoyo: true, hold: 2000 });
@@ -84,7 +84,7 @@ class Chapter2Scene extends Phaser.Scene {
         : "Your partner sees the burglar paths!\nClick rooms to place traps.";
 
     this.roomContainer.add(
-      this.add.text(cx, 55, instrText, {
+      this.add.text(cx, 78, instrText, {
         fontFamily: '"Rajdhani"',
         fontSize: '22px',
         color: LEGO_COLORS.WHITE,
@@ -511,7 +511,7 @@ class Chapter2Scene extends Phaser.Scene {
     this.doorsOpened = new Array(gridSize * gridSize).fill(false);
 
     this.roomContainer.add(
-      this.add.text(cx, 55, isSolo()
+      this.add.text(cx, 78, isSolo()
         ? "Open the right doors for Kevin's escape!\nClick doors along the path."
         : isHost
           ? "You see Kevin's path! Tell your partner which doors to open."

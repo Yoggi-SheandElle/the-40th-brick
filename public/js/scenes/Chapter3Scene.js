@@ -51,7 +51,7 @@ class Chapter3Scene extends Phaser.Scene {
                         '2020: The vision grows'];
     const introText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 20,
       milestones[roomIndex] || 'A milestone in the journey', {
-      fontFamily: FONT_BODY, fontSize: '13px', color: LEGO_COLORS.YELLOW, fontStyle: 'italic'
+      fontFamily: FONT_BODY, fontSize: '20px', fontStyle: 'italic', color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.roomContainer.add(introText);
     this.tweens.add({ targets: introText, alpha: 0.8, duration: 500, yoyo: true, hold: 2500 });
@@ -103,7 +103,7 @@ class Chapter3Scene extends Phaser.Scene {
     this.runeAnswer = new Array(numPairs).fill(-1);
 
     this.roomContainer.add(
-      this.add.text(cx, 55, isSolo()
+      this.add.text(cx, 78, isSolo()
         ? 'Match the runes! Click right side\nto cycle numbers until pairs match.'
         : isHost
           ? 'You see the LEFT runes. Tell your partner\nwhich right rune matches each!'
@@ -204,7 +204,7 @@ class Chapter3Scene extends Phaser.Scene {
     const cy = GAME_HEIGHT / 2;
 
     this.roomContainer.add(
-      this.add.text(cx, 55, 'Avoid the Eye! Click safe zones\nbefore the beam reaches them.', {
+      this.add.text(cx, 78, 'Avoid the Eye! Click safe zones\nbefore the beam reaches them.', {
         fontFamily: '"Rajdhani"',
         fontSize: '22px',
         color: LEGO_COLORS.ORANGE,
@@ -336,7 +336,7 @@ class Chapter3Scene extends Phaser.Scene {
     ];
 
     this.roomContainer.add(
-      this.add.text(cx, 55, isSolo()
+      this.add.text(cx, 78, isSolo()
         ? 'Use the clues to find the right book!\nClick a book to pick it.'
         : isHost
           ? 'You found clues! Tell your partner which book to grab.'
@@ -451,7 +451,7 @@ class Chapter3Scene extends Phaser.Scene {
     this.towerPositions = new Array(sections).fill(0);
 
     this.roomContainer.add(
-      this.add.text(cx, 55, isSolo()
+      this.add.text(cx, 78, isSolo()
         ? 'Align all tower sections to match!\nClick sections to rotate them.'
         : isHost
           ? 'You see the correct alignment!\nTell your partner how to rotate each section.'
@@ -560,7 +560,7 @@ class Chapter3Scene extends Phaser.Scene {
     this.ringOrder = [];
 
     this.roomContainer.add(
-      this.add.text(cx, 55, isSolo()
+      this.add.text(cx, 78, isSolo()
         ? 'Pass the Ring in the correct order!\nClick characters in sequence.'
         : isHost
           ? 'You know the order the Ring must pass!\nTell your partner who gets it next.'

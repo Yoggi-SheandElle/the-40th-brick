@@ -52,7 +52,7 @@ class Chapter1Scene extends Phaser.Scene {
                       'Mia\'s Rescue', 'Andrea\'s Stage', 'Dolphin Bay', 'Horse Riding', 'The Masterpiece'];
     const introText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 20,
       'Celebrating Ante\'s work on ' + (setNames[roomIndex] || 'LEGO Friends'), {
-      fontFamily: FONT_BODY, fontSize: '12px', color: '#5A6A7A', fontStyle: 'italic'
+      fontFamily: FONT_BODY, fontSize: '20px', fontStyle: 'italic', color: '#8895A6'
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.roomContainer.add(introText);
     this.tweens.add({ targets: introText, alpha: 0.7, duration: 500, yoyo: true, hold: 2000 });
@@ -106,7 +106,7 @@ class Chapter1Scene extends Phaser.Scene {
         : 'Your partner sees the target.\nClick bricks to set their colors.';
 
     this.roomContainer.add(
-      this.add.text(cx, 55, instrText, TEXT_STYLES.body).setOrigin(0.5)
+      this.add.text(cx, 78, instrText, TEXT_STYLES.body).setOrigin(0.5)
     );
 
     // Target display (only visible to host/Ante)
@@ -301,7 +301,7 @@ class Chapter1Scene extends Phaser.Scene {
     this.patternAnswer = Array.from({length: gridSize}, () => new Array(gridSize).fill(null));
 
     this.roomContainer.add(
-      this.add.text(cx, 55, 'Recreate the pattern below!\nClick cells to cycle colors.', {
+      this.add.text(cx, 78, 'Recreate the pattern below!\nClick cells to cycle colors.', {
         fontFamily: '"Rajdhani"', fontSize: '22px', color: LEGO_COLORS.WHITE,
         align: 'center', lineSpacing: 4
       }).setOrigin(0.5)
@@ -312,7 +312,7 @@ class Chapter1Scene extends Phaser.Scene {
     const targetStartX = cx - (gridSize * (cellSize + 2)) / 2;
     this.roomContainer.add(
       this.add.text(targetStartX, 85, 'TARGET:', {
-        fontFamily: '"Orbitron"', fontSize: '10px', color: LEGO_COLORS.CYAN, letterSpacing: 1
+        fontFamily: '"Orbitron"', fontSize: '20px', fontStyle: 'bold', color: LEGO_COLORS.CYAN, letterSpacing: 1
       }).setOrigin(0, 0.5)
     );
     const targetStartY = 100;
@@ -328,7 +328,7 @@ class Chapter1Scene extends Phaser.Scene {
     // Player grid (bottom)
     this.roomContainer.add(
       this.add.text(targetStartX, 100 + gridSize * (cellSize + 2) + 15, 'YOUR BUILD:', {
-        fontFamily: '"Orbitron"', fontSize: '10px', color: LEGO_COLORS.CYAN, letterSpacing: 1
+        fontFamily: '"Orbitron"', fontSize: '20px', fontStyle: 'bold', color: LEGO_COLORS.CYAN, letterSpacing: 1
       }).setOrigin(0, 0.5)
     );
     const buildStartY = 100 + gridSize * (cellSize + 2) + 30;
@@ -593,7 +593,7 @@ class Chapter1Scene extends Phaser.Scene {
 
       const label = this.add.text(x, y, name, {
         fontFamily: FONT_TITLE,
-        fontSize: '14px',
+        fontSize: '20px',
         fontStyle: 'bold',
         color: '#1B2A34',
         align: 'center',
@@ -676,7 +676,7 @@ class Chapter1Scene extends Phaser.Scene {
     this.buildTarget = correctOrder;
 
     this.roomContainer.add(
-      this.add.text(cx, 55, 'Arrange the bricks in the correct order!\nClick two bricks to swap them.', {
+      this.add.text(cx, 78, 'Arrange the bricks in the correct order!\nClick two bricks to swap them.', {
         fontFamily: '"Rajdhani"', fontSize: '22px', color: LEGO_COLORS.WHITE,
         align: 'center', lineSpacing: 4
       }).setOrigin(0.5)
@@ -685,7 +685,7 @@ class Chapter1Scene extends Phaser.Scene {
     // Target order display
     this.roomContainer.add(
       this.add.text(cx, 90, 'TARGET ORDER:', {
-        fontFamily: '"Orbitron"', fontSize: '10px', color: LEGO_COLORS.CYAN, letterSpacing: 1
+        fontFamily: '"Orbitron"', fontSize: '20px', fontStyle: 'bold', color: LEGO_COLORS.CYAN, letterSpacing: 1
       }).setOrigin(0.5)
     );
     const targetGfx = this.add.graphics();
@@ -699,7 +699,7 @@ class Chapter1Scene extends Phaser.Scene {
     // Player bricks (swappable)
     this.roomContainer.add(
       this.add.text(cx, 155, 'YOUR BUILD:', {
-        fontFamily: '"Orbitron"', fontSize: '10px', color: LEGO_COLORS.CYAN, letterSpacing: 1
+        fontFamily: '"Orbitron"', fontSize: '20px', fontStyle: 'bold', color: LEGO_COLORS.CYAN, letterSpacing: 1
       }).setOrigin(0.5)
     );
 
