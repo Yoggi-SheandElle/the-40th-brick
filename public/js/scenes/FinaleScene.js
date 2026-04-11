@@ -1029,7 +1029,63 @@ class FinaleScene extends Phaser.Scene {
       }).setOrigin(0.5).setAlpha(0);
 
       this.tweens.add({ targets: complete, alpha: 1, duration: 500, delay: 2500 });
+
+      // Bonus chapter launcher button (Chapter 5: The Designer's Desk)
+      this.time.delayedCall(3500, () => this.showBonusChapterButton());
     });
+  }
+
+  showBonusChapterButton() {
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT - 90;
+
+    const btn = this.add.container(cx, cy).setAlpha(0).setDepth(150);
+    const w = 460;
+    const h = 70;
+
+    const bg = this.add.graphics();
+    bg.fillStyle(hexToInt(LEGO_COLORS.CYAN), 0.18);
+    bg.fillRoundedRect(-w / 2, -h / 2, w, h, 12);
+    bg.lineStyle(3, hexToInt(LEGO_COLORS.CYAN), 1);
+    bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 12);
+
+    const lbl = this.add.text(0, 0, "BONUS: THE DESIGNER'S DESK >", {
+      fontFamily: '"Rajdhani"',
+      fontSize: '26px',
+      fontStyle: 'bold',
+      color: LEGO_COLORS.CYAN,
+      stroke: '#000000',
+      strokeThickness: 3
+    }).setOrigin(0.5);
+
+    btn.add([bg, lbl]);
+    btn.setSize(w, h);
+    btn.setInteractive({ useHandCursor: true });
+    btn.on('pointerdown', () => {
+      this.scene.start('Chapter5Scene', { players: this.players });
+    });
+    btn.on('pointerover', () => {
+      bg.clear();
+      bg.fillStyle(hexToInt(LEGO_COLORS.CYAN), 0.4);
+      bg.fillRoundedRect(-w / 2, -h / 2, w, h, 12);
+      bg.lineStyle(4, hexToInt(LEGO_COLORS.CYAN), 1);
+      bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 12);
+      lbl.setColor(LEGO_COLORS.WHITE);
+    });
+    btn.on('pointerout', () => {
+      bg.clear();
+      bg.fillStyle(hexToInt(LEGO_COLORS.CYAN), 0.18);
+      bg.fillRoundedRect(-w / 2, -h / 2, w, h, 12);
+      bg.lineStyle(3, hexToInt(LEGO_COLORS.CYAN), 1);
+      bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 12);
+      lbl.setColor(LEGO_COLORS.CYAN);
+    });
+
+    this.tweens.add({ targets: btn, alpha: 1, duration: 800 });
+
+    InputSystem.setFocusables([{
+      element: btn, x: cx, y: cy, callback: () => btn.emit('pointerdown')
+    }]);
   }
 
   launchConfetti() {

@@ -49,7 +49,8 @@ const config = {
     Chapter1Scene,
     Chapter2Scene,
     Chapter3Scene,
-    FinaleScene
+    FinaleScene,
+    Chapter5Scene
   ]
 };
 

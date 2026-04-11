@@ -1,5 +1,5 @@
 // The 40th Brick - Service Worker for offline play
-const CACHE_NAME = '40th-brick-v2';
+const CACHE_NAME = '40th-brick-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -23,7 +23,8 @@ const ASSETS = [
   '/js/scenes/Chapter1Scene.js',
   '/js/scenes/Chapter2Scene.js',
   '/js/scenes/Chapter3Scene.js',
-  '/js/scenes/FinaleScene.js'
+  '/js/scenes/FinaleScene.js',
+  '/js/scenes/Chapter5Scene.js'
 ];
 
 // Install - cache all game assets
