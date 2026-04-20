@@ -196,9 +196,9 @@ class Chapter5Scene extends Phaser.Scene {
     this.yearSelectedSet = null;
 
     this.roomContainer.add(
-      this.add.text(cx, 78, "Match each set to its release year.\nPick a set, then pick its year.", {
+      this.add.text(cx, 78, "Match each set to its release year.\nOne year has two sets. Years can be reused.", {
         fontFamily: '"Rajdhani"',
-        fontSize: '24px',
+        fontSize: scaledFont(24),
         fontStyle: 'bold',
         color: LEGO_COLORS.CYAN,
         align: 'center',
@@ -336,7 +336,7 @@ class Chapter5Scene extends Phaser.Scene {
 
       const text = this.add.text(x + boxW / 2, y + boxH / 2, '"' + item.text + '"', {
         fontFamily: '"Rajdhani"',
-        fontSize: '19px',
+        fontSize: scaledFont(24),
         fontStyle: 'bold',
         color: LEGO_COLORS.WHITE,
         align: 'center',

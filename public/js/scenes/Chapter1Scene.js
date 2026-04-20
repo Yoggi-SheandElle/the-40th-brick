@@ -128,14 +128,13 @@ class Chapter1Scene extends Phaser.Scene {
         targetBricks.push(brick);
       });
 
-      // In rooms 5+, hide the target after 3 seconds (player must memorize)
-      if (this.currentRoom >= 5) {
-        this.time.delayedCall(3000, () => {
-          targetBricks.forEach(b => b.setVisible(false));
-          const hiddenMsg = this.add.text(cx, 125, 'MEMORIZE!', {
-            fontFamily: '"Rajdhani"', fontSize: '22px', color: LEGO_COLORS.RED
-          }).setOrigin(0.5);
-          this.roomContainer.add(hiddenMsg);
+      // From room 2+, hide the target after a brief flash (memory variant)
+      if (this.currentRoom >= 2) {
+        const holdMs = Math.max(2400, 700 * numBricks);
+        runMemoryReveal(this, [], {
+          holdMs,
+          banner: 'MEMORISE THE PALETTE',
+          onHide: () => targetBricks.forEach(b => b && b.setVisible(false))
         });
       }
     }
@@ -247,6 +246,10 @@ class Chapter1Scene extends Phaser.Scene {
     const cx = GAME_WIDTH / 2;
 
     if (correct) {
+      const personal = getPersonalPuzzle(1, this.currentRoom);
+      if (personal && personal.reward) {
+        SceneUI.showAchievementFlash(this, 'Palette locked in.', personal.reward);
+      }
       const successText = this.add.text(cx, GAME_HEIGHT / 2, 'PERFECT!', {
         fontFamily: '"Rajdhani"',
         fontSize: '32px',
@@ -267,19 +270,21 @@ class Chapter1Scene extends Phaser.Scene {
         }
       });
     } else {
-      // Show how many correct
       let correctCount = 0;
       this.puzzleTarget.forEach((color, i) => {
         if (this.puzzleAnswer[i] === color) correctCount++;
       });
 
-      const tryAgain = this.add.text(cx, GAME_HEIGHT / 2 + 80, `${correctCount}/${this.puzzleTarget.length} correct. Try again!`, {
+      const tryAgain = this.add.text(cx, GAME_HEIGHT / 2 + 80,
+        `${correctCount}/${this.puzzleTarget.length} correct. Missing: ` +
+        this.puzzleTarget.map((c, i) => this.puzzleAnswer[i] === c ? '' : colorName(c))
+          .filter(Boolean).slice(0, 3).join(', '), {
         fontFamily: '"Rajdhani"',
         fontSize: '22px',
         color: LEGO_COLORS.RED
       }).setOrigin(0.5);
 
-      this.time.delayedCall(2000, () => tryAgain.destroy());
+      this.time.delayedCall(2500, () => tryAgain.destroy());
     }
   }
 
@@ -455,10 +460,31 @@ class Chapter1Scene extends Phaser.Scene {
       brickBtns.push({ brick, hitArea, color });
     });
 
+    // REPLAY button so the player can ask to see the sequence again
+    const replayBtn = this.add.container(cx, cy - 80);
+    const rBg = this.add.graphics();
+    rBg.fillStyle(hexToInt(LEGO_COLORS.CYAN), 0.18);
+    rBg.fillRoundedRect(-70, -16, 140, 32, 6);
+    rBg.lineStyle(2, hexToInt(LEGO_COLORS.CYAN), 0.7);
+    rBg.strokeRoundedRect(-70, -16, 140, 32, 6);
+    const rLbl = this.add.text(0, 0, 'REPLAY', {
+      fontFamily: FONT_TITLE, fontSize: scaledFont(18), fontStyle: 'bold',
+      color: LEGO_COLORS.CYAN, letterSpacing: 2
+    }).setOrigin(0.5);
+    replayBtn.add([rBg, rLbl]);
+    replayBtn.setSize(140, 32);
+    replayBtn.setInteractive({ useHandCursor: true });
+    replayBtn.on('pointerdown', () => {
+      this.playerSequence = [];
+      this.playSequenceAnimation(0);
+    });
+    this.roomContainer.add(replayBtn);
+
     // Register focusables for controller navigation
     const seqFocusables = brickBtns.map(b => ({
       element: b.hitArea, x: b.hitArea.x, y: b.hitArea.y, callback: () => b.hitArea.emit('pointerdown')
     }));
+    seqFocusables.push({ element: replayBtn, x: cx, y: cy - 80, callback: () => replayBtn.emit('pointerdown') });
     InputSystem.setFocusables(seqFocusables);
 
     // Play sequence animation
@@ -535,8 +561,18 @@ class Chapter1Scene extends Phaser.Scene {
     const cardH = 80;
     const gap = 12;
 
-    const setNames = ['Home Alone', 'Barad-dur', 'Alpine Lodge', 'Tree House',
-                       'Table Football', 'Flying Machine', 'Book Nook', 'Fashion Shop'];
+    // Prefer Ante's personal tier1 set answers when available
+    let setNames = [];
+    if (typeof PERSONAL_PUZZLES !== 'undefined' && PERSONAL_PUZZLES.tier1) {
+      setNames = PERSONAL_PUZZLES.tier1
+        .map(p => p.answer)
+        .filter(a => a && typeof a === 'string' && a.length <= 18)
+        .map(a => a.replace(/\b\w/g, ch => ch.toUpperCase()));
+    }
+    if (setNames.length < (cols * rows) / 2) {
+      setNames = ['Home Alone', 'Barad-dur', 'Alpine Lodge', 'Tree House',
+                  'Table Football', 'Flying Machine', 'Book Nook', 'Fashion Shop'];
+    }
     const pairs = setNames.slice(0, (cols * rows) / 2);
     let cards = [...pairs, ...pairs];
 
@@ -557,6 +593,14 @@ class Chapter1Scene extends Phaser.Scene {
         color: LEGO_COLORS.WHITE
       }).setOrigin(0.5)
     );
+
+    this.matchHud = this.add.text(GAME_WIDTH - 40, 72, 'Matched 0/' + this.totalPairs, {
+      fontFamily: FONT_MONO,
+      fontSize: scaledFont(20),
+      fontStyle: 'bold',
+      color: LEGO_COLORS.YELLOW
+    }).setOrigin(1, 0.5).setDepth(250);
+    this.roomContainer.add(this.matchHud);
 
     const totalW = cols * (cardW + gap) - gap;
     const totalH = rows * (cardH + gap) - gap;
@@ -632,13 +676,17 @@ class Chapter1Scene extends Phaser.Scene {
     if (this.flippedCards.length === 2) {
       const [a, b] = this.flippedCards;
       if (this.cardObjects[a].name === this.cardObjects[b].name) {
-        // Match!
         this.cardObjects[a].matched = true;
         this.cardObjects[b].matched = true;
         this.matchedPairs++;
         this.flippedCards = [];
+        if (this.matchHud) this.matchHud.setText('Matched ' + this.matchedPairs + '/' + this.totalPairs);
 
         if (this.matchedPairs === this.totalPairs) {
+          const personal = getPersonalPuzzle(1, this.currentRoom);
+          if (personal && personal.reward) {
+            SceneUI.showAchievementFlash(this, 'All pairs!', personal.reward);
+          }
           this.time.delayedCall(500, () => this.nextRoom());
         }
       } else {

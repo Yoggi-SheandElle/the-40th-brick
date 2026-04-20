@@ -31,6 +31,9 @@ class FinaleScene extends Phaser.Scene {
     this.currentRoom = roomIndex;
     InputSystem.clearFocusables();
     if (this.roomContainer) this.roomContainer.destroy();
+    if (this.assemblyTimerEvent) { this.assemblyTimerEvent.remove(false); this.assemblyTimerEvent = null; }
+    if (this.speedTimerEvent) { this.speedTimerEvent.remove(false); this.speedTimerEvent = null; }
+    this.assemblyLocked = false;
     this.roomContainer = this.add.container(0, 0);
 
     // Last room is the birthday reveal
@@ -269,11 +272,18 @@ class FinaleScene extends Phaser.Scene {
         if (b.hitArea && b.hitArea.active) b.hitArea.destroy();
       }
       this.megaNext++;
+      const progress = this.megaNext - 1;
       if (this.megaProgressText && this.megaProgressText.active) {
-        this.megaProgressText.setText(`${this.megaNext - 1} / 100`);
+        this.megaProgressText.setText(`${progress} / 100`);
       }
       if (this.megaTargetText && this.megaTargetText.active && this.megaNext <= 100) {
         this.megaTargetText.setText(`FIND: ${this.megaNext}`);
+      }
+      // Milestone flashes so the long grind feels alive
+      if (progress === 25 || progress === 50 || progress === 75) {
+        const msg = progress + '/100. Keep going, Ante!';
+        launchCelebrationConfetti(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, 18);
+        SceneUI.showAchievementFlash(this, msg, progress === 75 ? '⭐' : '🧱');
       }
       network.sendPuzzleAction('mega_click', { brick: num });
 
@@ -341,6 +351,26 @@ class FinaleScene extends Phaser.Scene {
         q: "What is Ante's current title at LEGO?",
         options: ['Junior Designer', 'Model Designer', 'Design Master', 'Art Director'],
         correct: 2
+      },
+      {
+        q: 'What color is Dori, the older dog?',
+        options: ['Black', 'Brown', 'White', 'Golden'],
+        correct: 2
+      },
+      {
+        q: 'What color is Pino, the younger dog?',
+        options: ['White', 'Brown', 'Golden', 'Black'],
+        correct: 3
+      },
+      {
+        q: 'Total pieces: Home Alone + Table Football + Barad-dur?',
+        options: ['9,450', '10,295', '11,765', '12,890'],
+        correct: 2
+      },
+      {
+        q: 'Which object shows your deepest desire in Harry Potter?',
+        options: ['Pensieve', 'Mirror of Erised', 'Marauders Map', 'Time Turner'],
+        correct: 1
       }
     ];
 
@@ -506,19 +536,28 @@ class FinaleScene extends Phaser.Scene {
     }
 
     this.buildNext = 1;
+    this.buildLocked = false;
     const colors = [LEGO_COLORS.RED, LEGO_COLORS.BLUE, LEGO_COLORS.GREEN, LEGO_COLORS.YELLOW,
                     LEGO_COLORS.ORANGE, LEGO_COLORS.BRIGHT_PINK, LEGO_COLORS.MEDIUM_LAVENDER, LEGO_COLORS.BRIGHT_LIGHT_BLUE];
+
+    const brickRefs = [];
+
+    const paintBrick = (brick, label, color, num) => {
+      brick.clear();
+      brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
+      brick.fillRoundedRect(-38, -26, 76, 52, 6);
+      brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).lighten(15).color, 1);
+      brick.fillCircle(-14, -28, 7);
+      brick.fillCircle(14, -28, 7);
+      label.setColor(LEGO_COLORS.WHITE);
+      label.setText(num.toString());
+    };
 
     positions.forEach((pos, i) => {
       const num = i + 1;
       const color = colors[i % colors.length];
 
-      const brick = this.add.graphics();
-      brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
-      brick.fillRoundedRect(pos.x - 38, pos.y - 26, 76, 52, 6);
-      brick.fillStyle(Phaser.Display.Color.HexStringToColor(color).lighten(15).color, 1);
-      brick.fillCircle(pos.x - 14, pos.y - 28, 7);
-      brick.fillCircle(pos.x + 14, pos.y - 28, 7);
+      const brick = this.add.graphics({ x: pos.x, y: pos.y });
       this.roomContainer.add(brick);
 
       const label = this.add.text(pos.x, pos.y, num.toString(), {
@@ -530,20 +569,24 @@ class FinaleScene extends Phaser.Scene {
         strokeThickness: 4
       }).setOrigin(0.5);
       this.roomContainer.add(label);
+      paintBrick(brick, label, color, num);
+      brickRefs.push({ brick, label, color, num });
 
       const hitArea = this.add.rectangle(pos.x, pos.y, 80, 60, 0x000000, 0);
       hitArea.setInteractive({ useHandCursor: true });
       hitArea.on('pointerdown', () => {
+        if (this.buildLocked) return;
         if (num === this.buildNext) {
           brick.clear();
           brick.fillStyle(hexToInt(LEGO_COLORS.GREEN), 0.5);
-          brick.fillRoundedRect(pos.x - 38, pos.y - 26, 76, 52, 6);
+          brick.fillRoundedRect(-38, -26, 76, 52, 6);
           label.setColor(LEGO_COLORS.GREEN);
           label.setText('OK');
           this.buildNext++;
           network.sendPuzzleAction('speed_click', { brick: num });
 
           if (this.buildNext > numBricks) {
+            this.buildLocked = true;
             this.showFeedback('SPEED BUILD COMPLETE!', LEGO_COLORS.GREEN, () => this.nextRoom());
           }
         }
@@ -551,14 +594,20 @@ class FinaleScene extends Phaser.Scene {
       this.roomContainer.add(hitArea);
     });
 
+    const resetBricks = () => {
+      brickRefs.forEach(r => paintBrick(r.brick, r.label, r.color, r.num));
+    };
+
     // Register focusables for controller navigation
     const speedFocusables = positions.map((pos, i) => ({
       element: null, x: pos.x, y: pos.y, callback: () => {
+        if (this.buildLocked) return;
         const num = i + 1;
         if (num === this.buildNext) {
           this.buildNext++;
           network.sendPuzzleAction('speed_click', { brick: num });
           if (this.buildNext > numBricks) {
+            this.buildLocked = true;
             this.showFeedback('SPEED BUILD COMPLETE!', LEGO_COLORS.GREEN, () => this.nextRoom());
           }
         }
@@ -578,18 +627,30 @@ class FinaleScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.roomContainer.add(this.timerText);
 
-    this.time.addEvent({
-      delay: 1000,
-      repeat: 14,
-      callback: () => {
-        this.buildTimer--;
-        if (this.timerText) this.timerText.setText(`Time: ${this.buildTimer}`);
-        if (this.buildTimer <= 0 && this.buildNext <= numBricks) {
-          this.buildNext = 1;
-          this.showFeedback('TOO SLOW!', LEGO_COLORS.RED);
+    const startTimer = () => {
+      if (this.speedTimerEvent) this.speedTimerEvent.remove(false);
+      this.speedTimerEvent = this.time.addEvent({
+        delay: 1000,
+        repeat: 14,
+        callback: () => {
+          if (this.buildLocked) return;
+          this.buildTimer--;
+          if (this.timerText) this.timerText.setText(`Time: ${this.buildTimer}`);
+          if (this.buildTimer <= 0 && this.buildNext <= numBricks) {
+            this.buildLocked = true;
+            this.showFeedback('TOO SLOW! Try again.', LEGO_COLORS.RED, () => {
+              this.buildNext = 1;
+              this.buildTimer = 15;
+              if (this.timerText) this.timerText.setText(`Time: ${this.buildTimer}`);
+              resetBricks();
+              this.buildLocked = false;
+              startTimer();
+            });
+          }
         }
-      }
-    });
+      });
+    };
+    startTimer();
   }
 
   // PUZZLE: Guess which quote belongs to Ante
@@ -633,6 +694,20 @@ class FinaleScene extends Phaser.Scene {
     const firstBoxY = 110;                    // top of first box (below title)
     const textWrapWidth = GAME_WIDTH - 240;   // 1040, leaves room for number label + padding
 
+    this.quoteGreyed = new Set();
+    const quoteRefs = [];
+
+    const greyOutBox = (ref) => {
+      ref.bg.clear();
+      ref.bg.fillStyle(0x1A1A24, 0.9);
+      ref.bg.fillRoundedRect(60, ref.boxTop, boxWidth, boxHeight, 12);
+      ref.bg.lineStyle(2, 0x444444, 0.4);
+      ref.bg.strokeRoundedRect(60, ref.boxTop, boxWidth, boxHeight, 12);
+      ref.numLbl.setColor('#4A4A5A');
+      ref.quoteText.setColor('#555566');
+      if (ref.hitArea.disableInteractive) ref.hitArea.disableInteractive();
+    };
+
     options.forEach((quote, i) => {
       const boxTop = firstBoxY + i * boxSpacing;
       const boxCenterY = boxTop + boxHeight / 2;
@@ -644,35 +719,38 @@ class FinaleScene extends Phaser.Scene {
       bg.strokeRoundedRect(60, boxTop, boxWidth, boxHeight, 12);
       this.roomContainer.add(bg);
 
-      this.roomContainer.add(
-        this.add.text(90, boxTop + 14, `${i + 1}.`, {
-          fontFamily: '"Rajdhani"',
-          fontSize: '38px',
-          fontStyle: 'bold',
-          color: quoteColors[i]
-        })
-      );
+      const numLbl = this.add.text(90, boxTop + 14, `${i + 1}.`, {
+        fontFamily: '"Rajdhani"',
+        fontSize: '38px',
+        fontStyle: 'bold',
+        color: quoteColors[i]
+      });
+      this.roomContainer.add(numLbl);
 
-      this.roomContainer.add(
-        this.add.text(cx, boxCenterY, `"${quote}"`, {
-          fontFamily: '"Rajdhani"',
-          fontSize: '30px',
-          fontStyle: 'bold',
-          color: LEGO_COLORS.WHITE,
-          wordWrap: { width: textWrapWidth },
-          align: 'center',
-          lineSpacing: 6
-        }).setOrigin(0.5)
-      );
+      const quoteText = this.add.text(cx, boxCenterY, `"${quote}"`, {
+        fontFamily: '"Rajdhani"',
+        fontSize: '30px',
+        fontStyle: 'bold',
+        color: LEGO_COLORS.WHITE,
+        wordWrap: { width: textWrapWidth },
+        align: 'center',
+        lineSpacing: 6
+      }).setOrigin(0.5);
+      this.roomContainer.add(quoteText);
 
-      // Hit area covers the ENTIRE visual box so multi-line quotes stay clickable
       const hitArea = this.add.rectangle(cx, boxCenterY, boxWidth, boxHeight, 0x000000, 0);
       hitArea.setInteractive({ useHandCursor: true });
+      const ref = { bg, numLbl, quoteText, hitArea, boxTop };
+      quoteRefs.push(ref);
+
       hitArea.on('pointerdown', () => {
+        if (this.quoteGreyed.has(i)) return;
         network.sendPuzzleAction('quote_guess', { choice: i });
         if (i === correctFinal) {
           this.showFeedback(`YES! - ${realQuote.source}`, LEGO_COLORS.GREEN, () => this.nextRoom());
         } else {
+          this.quoteGreyed.add(i);
+          greyOutBox(ref);
           this.showFeedback("That wasn't Ante!", LEGO_COLORS.RED);
         }
       });
@@ -682,14 +760,8 @@ class FinaleScene extends Phaser.Scene {
     // Register focusables for controller navigation
     const quoteFocusables = options.map((quote, i) => {
       const boxCenterY = firstBoxY + i * boxSpacing + boxHeight / 2;
-      return { element: null, x: cx, y: boxCenterY, callback: () => {
-        network.sendPuzzleAction('quote_guess', { choice: i });
-        if (i === correctFinal) {
-          this.showFeedback(`YES! - ${realQuote.source}`, LEGO_COLORS.GREEN, () => this.nextRoom());
-        } else {
-          this.showFeedback("That wasn't Ante!", LEGO_COLORS.RED);
-        }
-      }};
+      return { element: null, x: cx, y: boxCenterY,
+        callback: () => quoteRefs[i].hitArea.emit('pointerdown') };
     });
     InputSystem.setFocusables(quoteFocusables);
   }
@@ -753,14 +825,7 @@ class FinaleScene extends Phaser.Scene {
       btn.add([bg, lbl]);
       btn.setSize(140, 80);
       btn.setInteractive({ useHandCursor: true });
-      btn.on('pointerdown', () => {
-        network.sendPuzzleAction('count_answer', { answer: num });
-        if (num === targetCount) {
-          this.showFeedback('CORRECT!', LEGO_COLORS.GREEN, () => this.nextRoom());
-        } else {
-          this.showFeedback(`It was ${targetCount}!`, LEGO_COLORS.RED);
-        }
-      });
+      btn.on('pointerdown', () => this._handleBrickCountPick(num, targetCount));
       this.roomContainer.add(btn);
     });
 
@@ -768,16 +833,20 @@ class FinaleScene extends Phaser.Scene {
     const countFocusables = options.map((num, i) => {
       const bx = cx - 270 + i * 180;
       const by = GAME_HEIGHT - 80;
-      return { element: null, x: bx, y: by, callback: () => {
-        network.sendPuzzleAction('count_answer', { answer: num });
-        if (num === targetCount) {
-          this.showFeedback('CORRECT!', LEGO_COLORS.GREEN, () => this.nextRoom());
-        } else {
-          this.showFeedback(`It was ${targetCount}!`, LEGO_COLORS.RED);
-        }
-      }};
+      return { element: null, x: bx, y: by,
+        callback: () => this._handleBrickCountPick(num, targetCount) };
     });
     InputSystem.setFocusables(countFocusables);
+  }
+
+  _handleBrickCountPick(num, targetCount) {
+    network.sendPuzzleAction('count_answer', { answer: num });
+    if (num === targetCount) {
+      launchCelebrationConfetti(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, 40);
+      this.showFeedback('CORRECT!', LEGO_COLORS.GREEN, () => this.nextRoom());
+    } else {
+      this.showFeedback(`It was ${targetCount}!`, LEGO_COLORS.RED);
+    }
   }
 
   // PUZZLE: Timed Set Assembly - reassemble Ante's iconic LEGO sets
@@ -853,6 +922,9 @@ class FinaleScene extends Phaser.Scene {
     const startY = 250;
     const focusItems = [];
 
+    this.assemblyLocked = false;
+    this.assemblyBtns = [];
+
     shuffled.forEach((part, i) => {
       const col = i % cols;
       const row = Math.floor(i / cols);
@@ -872,9 +944,11 @@ class FinaleScene extends Phaser.Scene {
       btn.add([bg, lbl]);
       btn.setSize(btnW, btnH);
       btn.setInteractive({ useHandCursor: true });
+      this.assemblyBtns.push(btn);
 
       const idx = i;
       btn.on('pointerdown', () => {
+        if (this.assemblyLocked) return;
         const correctNext = this.assemblyTarget[this.assemblyOrder.length];
         if (part === correctNext) {
           // Correct!
@@ -898,7 +972,8 @@ class FinaleScene extends Phaser.Scene {
             this.showFeedback('SET COMPLETE!\n' + setData.name, LEGO_COLORS.GREEN, () => this.nextRoom());
           }
         } else {
-          // Wrong order
+          // Wrong order - lock all buttons during the flash
+          this.assemblyLocked = true;
           bg.clear();
           bg.fillStyle(hexToInt(LEGO_COLORS.RED), 0.35);
           bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 10);
@@ -912,6 +987,7 @@ class FinaleScene extends Phaser.Scene {
             bg.lineStyle(2, hexToInt(LEGO_COLORS.CYAN), 0.5);
             bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 10);
             lbl.setColor('#E8EEFA');
+            this.assemblyLocked = false;
           });
         }
       });
@@ -926,7 +1002,7 @@ class FinaleScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.roomContainer.add(this.assemblyTimerText);
 
-    this.time.addEvent({
+    this.assemblyTimerEvent = this.time.addEvent({
       delay: 1000,
       repeat: this.assemblyTimer - 1,
       callback: () => {
@@ -937,6 +1013,8 @@ class FinaleScene extends Phaser.Scene {
           if (this.assemblyTimer <= 5) this.assemblyTimerText.setColor(LEGO_COLORS.RED);
         }
         if (this.assemblyTimer <= 0) {
+          this.assemblyLocked = true;
+          if (this.assemblyTimerEvent) { this.assemblyTimerEvent.remove(false); this.assemblyTimerEvent = null; }
           this.showFeedback('TIME UP!\nThe set stays unfinished...', LEGO_COLORS.RED);
           this.time.delayedCall(2000, () => this.startRoom(this.currentRoom));
         }

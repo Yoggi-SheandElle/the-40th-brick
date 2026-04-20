@@ -190,6 +190,107 @@ function launchCelebrationConfetti(scene, x, y, count) {
   }
 }
 
+// Human-readable name for a LEGO hex color. Returns 'Unknown' if not found.
+function colorName(hex) {
+  if (!hex) return 'Unknown';
+  const entries = Object.keys(LEGO_COLORS);
+  for (let i = 0; i < entries.length; i++) {
+    if (LEGO_COLORS[entries[i]] === hex) {
+      return entries[i].replace(/_/g, ' ').toLowerCase()
+        .replace(/\b\w/g, ch => ch.toUpperCase());
+    }
+  }
+  return hex;
+}
+
+// Map a chapter (1-4) and room index within that chapter (0-based)
+// to a PERSONAL_PUZZLES tier entry. Returns null when data is missing.
+// Rooms 1-10 -> tier1, 11-20 -> tier2, 21-30 -> tier3, 31-40 -> tier4.
+function getPersonalPuzzle(chapter, roomIndex) {
+  if (typeof PERSONAL_PUZZLES === 'undefined') return null;
+  const tierKey = 'tier' + chapter;
+  const tier = PERSONAL_PUZZLES[tierKey];
+  if (!tier || !tier.length) return null;
+  const idx = ((roomIndex % tier.length) + tier.length) % tier.length;
+  return tier[idx];
+}
+
+// Flash a set of display elements with a MEMORISE banner, then blank their
+// text/content so the player has to remember. Used by Ch1 color, Ch2 trap,
+// Ch3 tower, etc. Elements can be Phaser.Text or any object with setText.
+// Options: { holdMs=2800, blank='?', banner='MEMORISE' }
+function runMemoryReveal(scene, elements, options) {
+  const opts = options || {};
+  const holdMs = opts.holdMs || 2800;
+  const blank = opts.blank !== undefined ? opts.blank : '?';
+  const bannerText = opts.banner || 'MEMORISE';
+  const onHide = opts.onHide;
+
+  const banner = scene.add.text(GAME_WIDTH / 2, 110, bannerText, {
+    fontFamily: FONT_TITLE,
+    fontSize: scaledFont(24),
+    fontStyle: 'bold',
+    color: LEGO_COLORS.CYAN,
+    letterSpacing: 3
+  }).setOrigin(0.5).setDepth(400);
+  scene.tweens.add({
+    targets: banner,
+    alpha: { from: 0.4, to: 1 },
+    duration: 400,
+    yoyo: true,
+    repeat: Math.floor(holdMs / 800)
+  });
+
+  scene.time.delayedCall(holdMs, () => {
+    banner.destroy();
+    (elements || []).forEach(el => {
+      if (!el) return;
+      if (typeof el.setText === 'function') {
+        el.setText(blank);
+      } else if (el.setVisible) {
+        el.setVisible(false);
+      }
+    });
+    if (onHide) onHide();
+  });
+}
+
+// Create an attempts HUD with countdown. After maxAttempts wrongs, calls
+// onExhausted (typically auto-skip). Returns { record(ok), destroy }.
+function addAttemptsHUD(scene, container, maxAttempts, onExhausted) {
+  const max = maxAttempts || 3;
+  let used = 0;
+  const label = scene.add.text(GAME_WIDTH - 40, 72, '', {
+    fontFamily: FONT_MONO,
+    fontSize: scaledFont(18),
+    fontStyle: 'bold',
+    color: LEGO_COLORS.YELLOW
+  }).setOrigin(1, 0.5).setDepth(250);
+  container.add(label);
+
+  function render() {
+    const left = Math.max(0, max - used);
+    label.setText('Attempts left: ' + left + '/' + max);
+    label.setColor(left <= 1 ? LEGO_COLORS.RED : LEGO_COLORS.YELLOW);
+  }
+  render();
+
+  return {
+    record(ok) {
+      if (ok) return false;
+      used++;
+      render();
+      if (used >= max && onExhausted) {
+        onExhausted();
+        return true;
+      }
+      return false;
+    },
+    remaining() { return Math.max(0, max - used); },
+    destroy() { label.destroy(); }
+  };
+}
+
 // Create a futuristic glass-morphism button
 function createGameButton(scene, container, x, y, text, callback, color, width) {
   color = color || LEGO_COLORS.CYAN;

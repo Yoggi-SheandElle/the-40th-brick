@@ -630,5 +630,45 @@ const SceneUI = {
       callback();
       scene.cameras.main.fadeIn(350, 10, 14, 23);
     });
+  },
+
+  // Flash an achievement label with emoji reward on correct answers.
+  // Stays on screen ~1.6s, fades out. Independent of celebration overlays.
+  showAchievementFlash(scene, text, emoji) {
+    const cx = GAME_WIDTH / 2;
+    const cy = 180;
+    const container = scene.add.container(cx, cy).setDepth(450);
+    const label = (emoji ? emoji + '  ' : '') + text;
+
+    const bg = scene.add.graphics();
+    bg.fillStyle(0x0A0E17, 0.85);
+    bg.fillRoundedRect(-260, -28, 520, 56, 12);
+    bg.lineStyle(2, 0xF2CD37, 0.8);
+    bg.strokeRoundedRect(-260, -28, 520, 56, 12);
+
+    const txt = scene.add.text(0, 0, label, {
+      fontFamily: FONT_TITLE,
+      fontSize: scaledFont(22),
+      fontStyle: 'bold',
+      color: LEGO_COLORS.YELLOW
+    }).setOrigin(0.5);
+
+    container.add([bg, txt]);
+    container.setScale(0.7);
+    scene.tweens.add({
+      targets: container,
+      scale: 1,
+      duration: 220,
+      ease: 'Back.easeOut'
+    });
+    scene.tweens.add({
+      targets: container,
+      alpha: 0,
+      y: cy - 40,
+      delay: 1200,
+      duration: 500,
+      onComplete: () => container.destroy()
+    });
+    return container;
   }
 };

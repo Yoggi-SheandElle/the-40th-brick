@@ -78,7 +78,7 @@ class Chapter2Scene extends Phaser.Scene {
 
     // Instructions
     const instrText = isSolo()
-      ? "Place traps where burglars will enter!\nClick rooms to set traps."
+      ? "Memorise the burglar entry rooms.\nThe flash hides, then you place traps."
       : isHost
         ? "You see where burglars will enter!\nTell your partner where to place traps."
         : "Your partner sees the burglar paths!\nClick rooms to place traps.";
@@ -142,7 +142,7 @@ class Chapter2Scene extends Phaser.Scene {
         }).setOrigin(0.5)
       );
 
-      // Show burglar path for host
+      // Show burglar path for host (or solo: flash then blank)
       if (isHost && this.trapPositions.includes(i)) {
         const burglarIcon = this.add.text(x + roomW / 2, y + roomH / 2, 'BURGLAR', {
           fontFamily: '"Rajdhani"',
@@ -158,6 +158,11 @@ class Chapter2Scene extends Phaser.Scene {
           yoyo: true,
           repeat: -1
         });
+
+        if (isSolo()) {
+          if (!this._burglarMemoryIcons) this._burglarMemoryIcons = [];
+          this._burglarMemoryIcons.push(burglarIcon);
+        }
       }
 
       // Trap slot (clickable for guest)
@@ -220,6 +225,18 @@ class Chapter2Scene extends Phaser.Scene {
     }
     trapFocusables.push({ element: submitBtn, x: cx, y: GAME_HEIGHT - 80, callback: () => this.checkTraps() });
     InputSystem.setFocusables(trapFocusables);
+
+    // Solo memory reveal: flash burglar positions then hide them completely
+    if (isSolo() && this._burglarMemoryIcons && this._burglarMemoryIcons.length) {
+      const icons = this._burglarMemoryIcons;
+      const holdMs = Math.max(3000, 700 * this.trapPositions.length);
+      runMemoryReveal(this, [], {
+        holdMs,
+        banner: 'MEMORISE THE BURGLARS',
+        onHide: () => icons.forEach(icn => icn && icn.destroy())
+      });
+      this._burglarMemoryIcons = null;
+    }
 
     // Quote
     const quote = getRandomQuote('ideas');
@@ -320,6 +337,20 @@ class Chapter2Scene extends Phaser.Scene {
     InputSystem.setFocusables([
       { element: trapBtn, x: cx, y: floorY + 80, callback: () => this.checkTiming() }
     ]);
+
+    // Attempts HUD: auto-skip after 3 misses so she never gets stuck
+    this.timingHud = addAttemptsHUD(this, this.roomContainer, 3, () => {
+      this.timingSuccess = true;
+      const text = this.add.text(GAME_WIDTH / 2, 140, 'Close enough. Moving on.', {
+        fontFamily: '"Rajdhani"',
+        fontSize: '26px',
+        fontStyle: 'bold',
+        color: LEGO_COLORS.YELLOW,
+        stroke: '#000000',
+        strokeThickness: 3
+      }).setOrigin(0.5);
+      this.time.delayedCall(1200, () => { text.destroy(); this.nextRoom(); });
+    });
   }
 
   checkTiming() {
@@ -327,6 +358,7 @@ class Chapter2Scene extends Phaser.Scene {
     const bx = this.burglar.x;
     if (bx >= this.trapZoneX && bx <= this.trapZoneX + this.trapZoneW) {
       this.timingSuccess = true;
+      if (this.timingHud) { this.timingHud.destroy(); this.timingHud = null; }
       const text = this.add.text(GAME_WIDTH / 2, 140, 'GOT HIM!', {
         fontFamily: '"Rajdhani"',
         fontSize: '28px',
@@ -348,6 +380,7 @@ class Chapter2Scene extends Phaser.Scene {
         color: LEGO_COLORS.RED
       }).setOrigin(0.5);
       this.time.delayedCall(800, () => text.destroy());
+      if (this.timingHud) this.timingHud.record(false);
     }
   }
 
@@ -528,7 +561,7 @@ class Chapter2Scene extends Phaser.Scene {
 
     this.roomContainer.add(
       this.add.text(cx, 78, isSolo()
-        ? "Open the right doors for Kevin's escape!\nClick doors along the path."
+        ? "Memorise Kevin's path, then open the right doors!"
         : isHost
           ? "You see Kevin's path! Tell your partner which doors to open."
           : "Open doors so Kevin can escape! Your partner sees the path.", {
@@ -541,6 +574,8 @@ class Chapter2Scene extends Phaser.Scene {
     );
 
     this.mazeSlots = [];
+    this.mazeWrongCount = 0;
+    this.mazePathMarkers = [];
     for (let i = 0; i < gridSize * gridSize; i++) {
       const col = i % gridSize;
       const row = Math.floor(i / gridSize);
@@ -554,7 +589,7 @@ class Chapter2Scene extends Phaser.Scene {
       cell.strokeRect(x, y, cellW - 4, cellH - 4);
       this.roomContainer.add(cell);
 
-      // Show path for host
+      // Show path for host (or flash then hide in solo)
       if (isHost && this.mazePath.includes(i)) {
         const pathMarker = this.add.text(x + (cellW - 4) / 2, y + (cellH - 4) / 2,
           i === 0 ? 'START' : (i === this.mazePath[this.mazePath.length - 1] ? 'EXIT' : this.mazePath.indexOf(i).toString()), {
@@ -563,6 +598,12 @@ class Chapter2Scene extends Phaser.Scene {
           color: LEGO_COLORS.GREEN
         }).setOrigin(0.5);
         this.roomContainer.add(pathMarker);
+        this.mazePathMarkers.push({
+          marker: pathMarker,
+          cellIndex: i,
+          x: x + (cellW - 4) / 2,
+          y: y + (cellH - 4) / 2
+        });
       }
 
       // Door label
@@ -622,6 +663,17 @@ class Chapter2Scene extends Phaser.Scene {
     }
     mazeFocusables.push({ element: checkBtn, x: cx, y: GAME_HEIGHT - 80, callback: () => this.checkMaze() });
     InputSystem.setFocusables(mazeFocusables);
+
+    // Solo memory reveal: flash path, then hide markers
+    if (isSolo() && this.mazePathMarkers.length) {
+      const markers = this.mazePathMarkers.map(m => m.marker);
+      const holdMs = Math.max(3500, 500 * this.mazePath.length);
+      runMemoryReveal(this, [], {
+        holdMs,
+        banner: "MEMORISE KEVIN'S PATH",
+        onHide: () => markers.forEach(m => m && m.destroy())
+      });
+    }
   }
 
   checkMaze() {
@@ -639,6 +691,7 @@ class Chapter2Scene extends Phaser.Scene {
       }).setOrigin(0.5);
       this.time.delayedCall(1000, () => { text.destroy(); this.nextRoom(); });
     } else {
+      this.mazeWrongCount = (this.mazeWrongCount || 0) + 1;
       const msg = pathCorrect ? 'Too many doors open!' : 'Path blocked!';
       const text = this.add.text(cx, GAME_HEIGHT / 2, msg, {
         fontFamily: '"Rajdhani"',
@@ -646,6 +699,25 @@ class Chapter2Scene extends Phaser.Scene {
         color: LEGO_COLORS.RED
       }).setOrigin(0.5);
       this.time.delayedCall(1500, () => text.destroy());
+
+      // After 2 wrong attempts in solo, reveal one path cell as a hint
+      if (this.mazeWrongCount === 2 && isSolo() && this.mazePathMarkers && this.mazePathMarkers.length) {
+        const unopened = this.mazePathMarkers.filter(pm => !this.doorsOpened[pm.cellIndex]);
+        const pick = unopened.length ? unopened[Math.floor(Math.random() * unopened.length)] : null;
+        if (pick) {
+          const hint = this.add.text(pick.x, pick.y, '?', {
+            fontFamily: '"Rajdhani"',
+            fontSize: '28px',
+            fontStyle: 'bold',
+            color: LEGO_COLORS.YELLOW,
+            stroke: '#000000',
+            strokeThickness: 3
+          }).setOrigin(0.5);
+          this.roomContainer.add(hint);
+          this.tweens.add({ targets: hint, alpha: 0.4, duration: 600, yoyo: true, repeat: 4,
+            onComplete: () => hint.destroy() });
+        }
+      }
     }
   }
 
@@ -674,7 +746,7 @@ class Chapter2Scene extends Phaser.Scene {
     this.correctAnswer = basePattern[this.pattern.length % baseLen];
 
     this.roomContainer.add(
-      this.add.text(cx, 60, "Who's coming next?\nStudy the pattern!", {
+      this.add.text(cx, 60, "Who's coming next?\nPattern length: " + baseLen + " burglars, then it repeats.", {
         fontFamily: '"Rajdhani"',
         fontSize: '22px',
         color: LEGO_COLORS.WHITE,
@@ -682,6 +754,11 @@ class Chapter2Scene extends Phaser.Scene {
         lineSpacing: 6
       }).setOrigin(0.5)
     );
+
+    this.patternBaseLen = baseLen;
+    this.patternWrongCount = 0;
+    this.patternBurglarGfx = [];
+    this.patternBurglarLabels = [];
 
     // Show pattern
     this.pattern.forEach((bIdx, i) => {
@@ -693,14 +770,15 @@ class Chapter2Scene extends Phaser.Scene {
       gfx.fillStyle(0x1B2A34, 1);
       gfx.fillRect(bx - 12, 92, 24, 10);
       this.roomContainer.add(gfx);
+      this.patternBurglarGfx.push({ gfx, bx });
 
-      this.roomContainer.add(
-        this.add.text(bx, 150, b.name, {
-          fontFamily: '"Rajdhani"',
-          fontSize: '22px',
-          color: LEGO_COLORS.GREY
-        }).setOrigin(0.5)
-      );
+      const lbl = this.add.text(bx, 150, b.name, {
+        fontFamily: '"Rajdhani"',
+        fontSize: '22px',
+        color: LEGO_COLORS.GREY
+      }).setOrigin(0.5);
+      this.roomContainer.add(lbl);
+      this.patternBurglarLabels.push(lbl);
     });
 
     // Question mark
@@ -730,21 +808,7 @@ class Chapter2Scene extends Phaser.Scene {
       btn.add([bg, lbl]);
       btn.setSize(70, 40);
       btn.setInteractive({ useHandCursor: true });
-      btn.on('pointerdown', () => {
-        if (i === this.correctAnswer) {
-          const text = this.add.text(cx, by + 60, 'CORRECT!', {
-            fontFamily: '"Rajdhani"', fontSize: '22px',
-            color: LEGO_COLORS.GREEN
-          }).setOrigin(0.5);
-          this.time.delayedCall(1000, () => { text.destroy(); this.nextRoom(); });
-        } else {
-          const text = this.add.text(cx, by + 60, 'WRONG!', {
-            fontFamily: '"Rajdhani"', fontSize: '28px',
-            color: LEGO_COLORS.RED
-          }).setOrigin(0.5);
-          this.time.delayedCall(800, () => text.destroy());
-        }
-      });
+      btn.on('pointerdown', () => this._handlePatternPick(i, cx, by));
       this.roomContainer.add(btn);
     });
 
@@ -752,23 +816,40 @@ class Chapter2Scene extends Phaser.Scene {
     const patternFocusables = burglarTypes.map((b, idx) => {
       const bx = cx - 130 + idx * 90;
       const by = GAME_HEIGHT / 2 + 50;
-      return { element: null, x: bx, y: by, callback: () => {
-        if (idx === this.correctAnswer) {
-          const text = this.add.text(cx, by + 60, 'CORRECT!', {
-            fontFamily: '"Rajdhani"', fontSize: '22px',
-            color: LEGO_COLORS.GREEN
-          }).setOrigin(0.5);
-          this.time.delayedCall(1000, () => { text.destroy(); this.nextRoom(); });
-        } else {
-          const text = this.add.text(cx, by + 60, 'WRONG!', {
-            fontFamily: '"Rajdhani"', fontSize: '28px',
-            color: LEGO_COLORS.RED
-          }).setOrigin(0.5);
-          this.time.delayedCall(800, () => text.destroy());
-        }
-      }};
+      return { element: null, x: bx, y: by,
+        callback: () => this._handlePatternPick(idx, cx, by) };
     });
     InputSystem.setFocusables(patternFocusables);
+  }
+
+  _handlePatternPick(idx, cx, by) {
+    if (idx === this.correctAnswer) {
+      const text = this.add.text(cx, by + 60, 'CORRECT!', {
+        fontFamily: '"Rajdhani"', fontSize: '22px',
+        color: LEGO_COLORS.GREEN
+      }).setOrigin(0.5);
+      this.time.delayedCall(1000, () => { text.destroy(); this.nextRoom(); });
+    } else {
+      this.patternWrongCount = (this.patternWrongCount || 0) + 1;
+      const text = this.add.text(cx, by + 60, 'WRONG!', {
+        fontFamily: '"Rajdhani"', fontSize: '28px',
+        color: LEGO_COLORS.RED
+      }).setOrigin(0.5);
+      this.time.delayedCall(800, () => text.destroy());
+
+      // After first wrong, highlight the first repeating unit so she can see the cycle
+      if (this.patternWrongCount === 1 && this.patternBurglarGfx && this.patternBaseLen) {
+        for (let k = 0; k < this.patternBaseLen && k < this.patternBurglarGfx.length; k++) {
+          const item = this.patternBurglarGfx[k];
+          const ring = this.add.graphics();
+          ring.lineStyle(3, hexToInt(LEGO_COLORS.YELLOW), 1);
+          ring.strokeRoundedRect(item.bx - 20, 88, 40, 68, 6);
+          this.roomContainer.add(ring);
+          this.tweens.add({ targets: ring, alpha: 0.3, duration: 500, yoyo: true, repeat: 5,
+            onComplete: () => ring.destroy() });
+        }
+      }
+    }
   }
 
   drawHouse() {

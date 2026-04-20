@@ -317,13 +317,14 @@ class Chapter3Scene extends Phaser.Scene {
     }
     InputSystem.setFocusables(eyeFocusables);
 
-    // Beam sweep animation
+    // Beam sweep animation - speed scales with currentRoom (harder late in Ch3)
     let beamAngle = 0;
+    const beamStep = 0.05 + 0.008 * Math.max(0, (this.currentRoom || 0) - 20);
     this.time.addEvent({
       delay: 50,
       loop: true,
       callback: () => {
-        beamAngle += 0.06;
+        beamAngle += beamStep;
         beam.clear();
         beam.fillStyle(0xFF4400, 0.12);
         const bx = cx + Math.sin(beamAngle) * 350;
@@ -395,6 +396,7 @@ class Chapter3Scene extends Phaser.Scene {
     shelfGfx.fillRect(cx - 280, shelfY2 + 70, 560, 8);
     this.roomContainer.add(shelfGfx);
 
+    const bookRefs = [];
     books.forEach((book, i) => {
       const col = i % 4;
       const row = Math.floor(i / 4);
@@ -404,7 +406,6 @@ class Chapter3Scene extends Phaser.Scene {
       const bookGfx = this.add.graphics();
       bookGfx.fillStyle(Phaser.Display.Color.HexStringToColor(book.color).color, 1);
       bookGfx.fillRect(bx - 20, by, 40, 70);
-      // Spine detail
       bookGfx.lineStyle(1, 0xFFFFFF, 0.3);
       bookGfx.moveTo(bx - 18, by + 10);
       bookGfx.lineTo(bx + 18, by + 10);
@@ -420,15 +421,18 @@ class Chapter3Scene extends Phaser.Scene {
 
       const hitArea = this.add.rectangle(bx, by + 35, 44, 74, 0x000000, 0);
       hitArea.setInteractive({ useHandCursor: true });
-      hitArea.on('pointerdown', () => {
-        network.sendPuzzleAction('book_pick', { book: i });
-        if (i === correctBook) {
-          this.showSuccess('The ancient text reveals secrets!');
-        } else {
-          this.showError('That book crumbles to dust!');
-        }
-      });
+      bookRefs.push({ gfx: bookGfx, title: titleText, hit: hitArea, eliminated: false });
+
+      hitArea.on('pointerdown', () => this._handleBookPick(i, correctBook, bookRefs));
       this.roomContainer.add(hitArea);
+    });
+
+    this.libraryWrongCount = 0;
+    this.libraryHud = addAttemptsHUD(this, this.roomContainer, 3, () => {
+      // Auto-skip: highlight correct book then advance
+      const pick = bookRefs[correctBook];
+      if (pick && pick.title) pick.title.setColor(LEGO_COLORS.GREEN);
+      this.showSuccess('The right book was: ' + books[correctBook].title);
     });
 
     // Register focusables for controller navigation
@@ -437,14 +441,8 @@ class Chapter3Scene extends Phaser.Scene {
       const row = Math.floor(i / 4);
       const bx = cx - 240 + col * 120;
       const by = (row === 0 ? shelfY1 : shelfY2) + 35;
-      return { element: null, x: bx, y: by, callback: () => {
-        network.sendPuzzleAction('book_pick', { book: i });
-        if (i === correctBook) {
-          this.showSuccess('The ancient text reveals secrets!');
-        } else {
-          this.showError('That book crumbles to dust!');
-        }
-      }};
+      return { element: null, x: bx, y: by,
+        callback: () => this._handleBookPick(i, correctBook, bookRefs) };
     });
     InputSystem.setFocusables(bookFocusables);
 
@@ -459,6 +457,42 @@ class Chapter3Scene extends Phaser.Scene {
         lineSpacing: 4
       }).setOrigin(0.5)
     );
+  }
+
+  _handleBookPick(i, correctBook, bookRefs) {
+    network.sendPuzzleAction('book_pick', { book: i });
+    if (i === correctBook) {
+      this.showSuccess('The ancient text reveals secrets!');
+      return;
+    }
+    this.libraryWrongCount = (this.libraryWrongCount || 0) + 1;
+    this.showError('That book crumbles to dust!');
+
+    // Grey out the wrong book so she knows not to re-pick it
+    const wrongRef = bookRefs[i];
+    if (wrongRef && !wrongRef.eliminated) {
+      wrongRef.eliminated = true;
+      wrongRef.title.setColor(LEGO_COLORS.DARK_GREY);
+      wrongRef.gfx.setAlpha(0.25);
+      if (wrongRef.hit.disableInteractive) wrongRef.hit.disableInteractive();
+    }
+
+    if (this.libraryHud) this.libraryHud.record(false);
+
+    // After first wrong, auto-eliminate 2 red-herring books to narrow the field
+    if (this.libraryWrongCount === 1) {
+      const candidates = bookRefs
+        .map((r, idx) => ({ r, idx }))
+        .filter(o => !o.r.eliminated && o.idx !== correctBook);
+      for (let n = 0; n < 2 && candidates.length; n++) {
+        const pickIdx = Math.floor(Math.random() * candidates.length);
+        const pick = candidates.splice(pickIdx, 1)[0];
+        pick.r.eliminated = true;
+        pick.r.title.setColor(LEGO_COLORS.DARK_GREY);
+        pick.r.gfx.setAlpha(0.25);
+        if (pick.r.hit.disableInteractive) pick.r.hit.disableInteractive();
+      }
+    }
   }
 
   // PUZZLE 4: Tower rotate - align tower sections
