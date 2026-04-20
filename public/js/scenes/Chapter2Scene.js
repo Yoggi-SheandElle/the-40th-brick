@@ -378,25 +378,41 @@ class Chapter2Scene extends Phaser.Scene {
       }).setOrigin(0.5)
     );
 
-    // Show sequence to host
+    // Show sequence to host. Solo: flash for 4s then hide (memory game).
+    const seqLabels = [];
     if (isHost) {
       this.roomContainer.add(
-        this.add.text(cx, 90, 'ORDER:', {
+        this.add.text(cx, 90, isSolo() ? 'MEMORISE THE ORDER:' : 'ORDER:', {
           fontFamily: '"Rajdhani"',
-          fontSize: '22px',
-          color: LEGO_COLORS.GREY
+          fontSize: '24px',
+          fontStyle: 'bold',
+          color: isSolo() ? LEGO_COLORS.CYAN : LEGO_COLORS.GREY,
+          stroke: '#000000',
+          strokeThickness: 2
         }).setOrigin(0.5)
       );
 
       this.trapSequence.forEach((trap, i) => {
-        this.roomContainer.add(
-          this.add.text(cx, 110 + i * 20, `${i + 1}. ${trap}`, {
-            fontFamily: '"Rajdhani"',
-            fontSize: '22px',
-            color: LEGO_COLORS.YELLOW
-          }).setOrigin(0.5)
-        );
+        const lbl = this.add.text(cx, 115 + i * 22, `${i + 1}. ${trap}`, {
+          fontFamily: '"Rajdhani"',
+          fontSize: '22px',
+          fontStyle: 'bold',
+          color: LEGO_COLORS.YELLOW
+        }).setOrigin(0.5);
+        this.roomContainer.add(lbl);
+        seqLabels.push(lbl);
       });
+
+      if (isSolo()) {
+        // Give 4s to memorise, then blur the answer
+        const memTime = Math.max(3000, 800 * this.trapSequence.length);
+        this.time.delayedCall(memTime, () => {
+          seqLabels.forEach((l, idx) => {
+            l.setText(`${idx + 1}. ???`);
+            l.setColor(LEGO_COLORS.DARK_GREY);
+          });
+        });
+      }
     }
 
     // Trap buttons for guest

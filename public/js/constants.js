@@ -64,21 +64,39 @@ const FONT_BODY = '"Rajdhani", "Press Start 2P", monospace';
 const FONT_MONO = '"Orbitron", monospace';
 
 // Device-aware UI scaling
+// NOTE: Ante plays Steam Deck DOCKED to a 75" TV, so steamdeck profile is
+// tuned for TV readability, not handheld. Desktop also bumped because legibility
+// complaints came from couch distance even on normal monitors.
 const DEVICE_PROFILES = {
-  mobile:    { fontScale: 0.75, hitScale: 1.6, buttonScale: 1.2 },
-  desktop:   { fontScale: 1.0,  hitScale: 1.0, buttonScale: 1.0 },
-  steamdeck: { fontScale: 0.95, hitScale: 1.3, buttonScale: 1.15 },
-  tv:        { fontScale: 1.25, hitScale: 1.5, buttonScale: 1.3 }
+  mobile:    { fontScale: 0.85, hitScale: 1.6, buttonScale: 1.2 },
+  desktop:   { fontScale: 1.15, hitScale: 1.0, buttonScale: 1.1 },
+  steamdeck: { fontScale: 1.35, hitScale: 1.5, buttonScale: 1.3 },
+  tv:        { fontScale: 1.45, hitScale: 1.6, buttonScale: 1.4 }
 };
 
 let _cachedProfile = null;
 function getDeviceProfile() {
   if (_cachedProfile) return _cachedProfile;
+
+  // Manual override via ?scale=1.3 query or localStorage
+  let manualScale = null;
+  try {
+    const urlScale = new URLSearchParams(window.location.search).get('scale');
+    const lsScale = localStorage.getItem('fontScale');
+    const raw = parseFloat(urlScale || lsScale);
+    if (!isNaN(raw) && raw > 0.5 && raw < 2.5) manualScale = raw;
+  } catch (_) {}
+
   const p = detectPlatform();
-  if (p === 'mobile') _cachedProfile = DEVICE_PROFILES.mobile;
-  else if (p === 'steamdeck') _cachedProfile = DEVICE_PROFILES.steamdeck;
-  else if (p === 'tv' || (window.screen.width >= 2560 && !isTouchDevice())) _cachedProfile = DEVICE_PROFILES.tv;
-  else _cachedProfile = DEVICE_PROFILES.desktop;
+  let base;
+  if (p === 'mobile') base = DEVICE_PROFILES.mobile;
+  else if (p === 'steamdeck') base = DEVICE_PROFILES.steamdeck;
+  else if (p === 'tv' || (window.screen.width >= 1920 && !isTouchDevice())) base = DEVICE_PROFILES.tv;
+  else base = DEVICE_PROFILES.desktop;
+
+  _cachedProfile = manualScale
+    ? { ...base, fontScale: manualScale }
+    : base;
   return _cachedProfile;
 }
 

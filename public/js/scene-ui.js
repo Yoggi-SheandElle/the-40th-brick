@@ -230,8 +230,36 @@ const SceneUI = {
       scene.time.delayedCall(300, () => scene.scene.start('WorldMapScene'));
     });
 
-    // Main Menu button
-    const menuBtn = scene.add.container(cx, cy + 100).setDepth(402);
+    // Skip Room button (only if scene has nextRoom + we're in a chapter)
+    let skipBtn = null;
+    const canSkip = typeof scene.nextRoom === 'function' && scene.currentRoom !== undefined;
+    if (canSkip) {
+      // Redraw panel a bit taller
+      panel.clear();
+      panel.fillStyle(0x131824, 0.95);
+      panel.fillRoundedRect(cx - 160, cy - 150, 320, 300, 12);
+      panel.lineStyle(1, 0x00D4FF, 0.2);
+      panel.strokeRoundedRect(cx - 160, cy - 150, 320, 300, 12);
+      title.setY(cy - 115);
+
+      skipBtn = scene.add.container(cx, cy + 100).setDepth(402);
+      const skipBg = scene.add.graphics();
+      skipBg.fillStyle(hexToInt(LEGO_COLORS.ORANGE), 0.8);
+      skipBg.fillRoundedRect(-100, -20, 200, 40, 6);
+      const skipLbl = scene.add.text(0, 0, 'SKIP ROOM', {
+        fontFamily: FONT_TITLE, fontSize: '14px', fontStyle: 'bold', color: '#FFFFFF'
+      }).setOrigin(0.5);
+      skipBtn.add([skipBg, skipLbl]);
+      skipBtn.setSize(200, 40).setInteractive({ useHandCursor: true });
+      skipBtn.on('pointerdown', () => {
+        SceneUI.hidePauseMenu(scene);
+        try { scene.nextRoom(); } catch (e) { console.warn('[Skip]', e); }
+      });
+    }
+
+    // Main Menu button (moved down if skip is present)
+    const menuY = canSkip ? cy + 160 : cy + 100;
+    const menuBtn = scene.add.container(cx, menuY).setDepth(402);
     const menuBg = scene.add.graphics();
     menuBg.fillStyle(hexToInt(LEGO_COLORS.RED), 0.8);
     menuBg.fillRoundedRect(-100, -20, 200, 40, 6);
@@ -246,14 +274,18 @@ const SceneUI = {
       scene.time.delayedCall(300, () => scene.scene.start('TitleScene'));
     });
 
-    scene._pauseOverlay = { overlay, panel, title, resumeBtn, mapBtn, menuBtn };
+    scene._pauseOverlay = { overlay, panel, title, resumeBtn, mapBtn, menuBtn, skipBtn };
 
     // Controller focusables for pause menu
-    InputSystem.setFocusables([
+    const pauseFocus = [
       { element: resumeBtn, x: cx, y: cy - 20, callback: () => SceneUI.hidePauseMenu(scene) },
-      { element: mapBtn, x: cx, y: cy + 40, callback: () => { SceneUI.hidePauseMenu(scene); scene.cameras.main.fadeOut(300, 10, 14, 23); scene.time.delayedCall(300, () => scene.scene.start('WorldMapScene')); }},
-      { element: menuBtn, x: cx, y: cy + 100, callback: () => { SceneUI.hidePauseMenu(scene); scene.cameras.main.fadeOut(300, 10, 14, 23); scene.time.delayedCall(300, () => scene.scene.start('TitleScene')); }}
-    ]);
+      { element: mapBtn, x: cx, y: cy + 40, callback: () => { SceneUI.hidePauseMenu(scene); scene.cameras.main.fadeOut(300, 10, 14, 23); scene.time.delayedCall(300, () => scene.scene.start('WorldMapScene')); }}
+    ];
+    if (skipBtn) {
+      pauseFocus.push({ element: skipBtn, x: cx, y: cy + 100, callback: () => { SceneUI.hidePauseMenu(scene); try { scene.nextRoom(); } catch (e) {} } });
+    }
+    pauseFocus.push({ element: menuBtn, x: cx, y: menuY, callback: () => { SceneUI.hidePauseMenu(scene); scene.cameras.main.fadeOut(300, 10, 14, 23); scene.time.delayedCall(300, () => scene.scene.start('TitleScene')); }});
+    InputSystem.setFocusables(pauseFocus);
   },
 
   hidePauseMenu(scene) {
@@ -265,6 +297,7 @@ const SceneUI = {
     p.resumeBtn.destroy();
     p.mapBtn.destroy();
     p.menuBtn.destroy();
+    if (p.skipBtn) p.skipBtn.destroy();
     scene._pauseOverlay = null;
     InputSystem.clearFocusables();
   },

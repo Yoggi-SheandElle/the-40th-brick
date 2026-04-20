@@ -366,28 +366,68 @@ class FinaleScene extends Phaser.Scene {
       }).setOrigin(0.5)
     );
 
-    // Timer - 10 seconds to answer
-    this.triviaTimer = 10;
+    // Timer - 15 seconds, no hard lock on wrong. Reveals answer on timeout.
+    this.triviaTimer = 15;
     this.triviaLocked = false;
+    this.triviaWrongs = new Set();
     const timerText = this.add.text(cx, 220, `Time: ${this.triviaTimer}`, {
       fontFamily: '"Rajdhani"', fontSize: '36px', fontStyle: 'bold', color: LEGO_COLORS.YELLOW
     }).setOrigin(0.5);
     this.roomContainer.add(timerText);
 
-    const timerEvent = this.time.addEvent({
+    const btnRefs = [];
+
+    const revealAndAdvance = (msg, color) => {
+      this.triviaLocked = true;
+      // Flash correct answer
+      if (btnRefs[t.correct]) {
+        const { bg } = btnRefs[t.correct];
+        this.tweens.add({
+          targets: bg, alpha: 0.3, duration: 300, yoyo: true, repeat: 3
+        });
+      }
+      this.showFeedback(msg + '\nAnswer: ' + t.options[t.correct], color, () => this.nextRoom());
+    };
+
+    this.triviaTimerEvent = this.time.addEvent({
       delay: 1000,
-      repeat: 9,
+      repeat: 14,
       callback: () => {
-        if (!timerText || !timerText.active) return;
+        if (!timerText || !timerText.active || this.triviaLocked) return;
         this.triviaTimer--;
         timerText.setText(`Time: ${this.triviaTimer}`);
-        if (this.triviaTimer <= 0 && !this.triviaLocked) {
-          this.triviaLocked = true;
-          this.showFeedback('TIME UP!', LEGO_COLORS.RED);
-          this.time.delayedCall(3000, () => { this.triviaLocked = false; this.triviaTimer = 10; timerEvent.reset({ delay: 1000, repeat: 9 }); });
-        }
+        if (this.triviaTimer <= 5) timerText.setColor(LEGO_COLORS.RED);
+        if (this.triviaTimer <= 0) revealAndAdvance('TIME UP!', LEGO_COLORS.RED);
       }
     });
+
+    const pickAnswer = (i) => {
+      if (this.triviaLocked) return;
+      network.sendPuzzleAction('trivia_answer', { answer: i });
+      if (i === t.correct) {
+        this.triviaLocked = true;
+        this.showFeedback('CORRECT!', LEGO_COLORS.GREEN, () => this.nextRoom());
+      } else {
+        this.triviaWrongs.add(i);
+        // Grey out wrong answer, short shake, no lockout
+        const ref = btnRefs[i];
+        if (ref) {
+          ref.bg.clear();
+          ref.bg.fillStyle(0x2A2A3E, 0.6);
+          ref.bg.fillRoundedRect(-200, -42, 400, 84, 10);
+          ref.bg.lineStyle(2, hexToInt(LEGO_COLORS.RED), 0.5);
+          ref.bg.strokeRoundedRect(-200, -42, 400, 84, 10);
+          ref.lbl.setColor('#666666');
+          ref.btn.disableInteractive();
+        }
+        this.cameras.main.shake(120, 0.003);
+        InputSystem.vibrate(100, 0.4, 0.4);
+        // If all wrong options tried, reveal
+        if (this.triviaWrongs.size >= 3) {
+          revealAndAdvance('ALMOST!', LEGO_COLORS.YELLOW);
+        }
+      }
+    };
 
     t.options.forEach((opt, i) => {
       const bx = cx + (i % 2 === 0 ? -220 : 220);
@@ -411,38 +451,33 @@ class FinaleScene extends Phaser.Scene {
       btn.add([bg, lbl]);
       btn.setSize(400, 84);
       btn.setInteractive({ useHandCursor: true });
-      btn.on('pointerdown', () => {
-        if (this.triviaLocked) return;
-        network.sendPuzzleAction('trivia_answer', { answer: i });
-        if (i === t.correct) {
-          this.triviaLocked = true;
-          this.showFeedback('CORRECT!', LEGO_COLORS.GREEN, () => this.nextRoom());
-        } else {
-          this.triviaLocked = true;
-          this.showFeedback('NOPE! Wait 3s...', LEGO_COLORS.RED);
-          this.time.delayedCall(3000, () => { this.triviaLocked = false; });
-        }
-      });
+      btn.on('pointerdown', () => pickAnswer(i));
       this.roomContainer.add(btn);
+      btnRefs[i] = { btn, bg, lbl };
     });
 
-    // Register focusables for controller navigation
+    // SKIP button - Ante can always move on
+    const skipBtn = this.add.container(cx, GAME_HEIGHT - 55);
+    const skipBg = this.add.graphics();
+    skipBg.fillStyle(0x1A2030, 0.9);
+    skipBg.fillRoundedRect(-80, -22, 160, 44, 8);
+    skipBg.lineStyle(2, hexToInt(LEGO_COLORS.CYAN), 0.6);
+    skipBg.strokeRoundedRect(-80, -22, 160, 44, 8);
+    const skipLbl = this.add.text(0, 0, 'SKIP >', {
+      fontFamily: '"Rajdhani"', fontSize: '22px', fontStyle: 'bold', color: LEGO_COLORS.CYAN
+    }).setOrigin(0.5);
+    skipBtn.add([skipBg, skipLbl]);
+    skipBtn.setSize(160, 44);
+    skipBtn.setInteractive({ useHandCursor: true });
+    skipBtn.on('pointerdown', () => revealAndAdvance('SKIPPED', LEGO_COLORS.CYAN));
+    this.roomContainer.add(skipBtn);
+
     const triviaFocusables = t.options.map((opt, i) => {
       const bx = cx + (i % 2 === 0 ? -220 : 220);
       const by = 340 + Math.floor(i / 2) * 110;
-      return { element: null, x: bx, y: by, callback: () => {
-        if (this.triviaLocked) return;
-        network.sendPuzzleAction('trivia_answer', { answer: i });
-        if (i === t.correct) {
-          this.triviaLocked = true;
-          this.showFeedback('CORRECT!', LEGO_COLORS.GREEN, () => this.nextRoom());
-        } else {
-          this.triviaLocked = true;
-          this.showFeedback('NOPE! Wait 3s...', LEGO_COLORS.RED);
-          this.time.delayedCall(3000, () => { this.triviaLocked = false; });
-        }
-      }};
+      return { element: null, x: bx, y: by, callback: () => pickAnswer(i) };
     });
+    triviaFocusables.push({ element: skipBtn, x: cx, y: GAME_HEIGHT - 55, callback: () => skipBtn.emit('pointerdown') });
     InputSystem.setFocusables(triviaFocusables);
   }
 

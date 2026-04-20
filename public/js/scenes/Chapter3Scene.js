@@ -87,115 +87,139 @@ class Chapter3Scene extends Phaser.Scene {
     this.roomContainer.add(gfx);
   }
 
-  // PUZZLE 1: Rune matching - match dark tongue runes (symbol pairs)
+  // PUZZLE 1: Rune matching - click a left rune, click its twin on the right.
+  // Matched pairs lock in green. Wrong pair shakes red and deselects.
   createRunePuzzle() {
     const cx = GAME_WIDTH / 2;
-    const isHost = isSolo() || network.playerRole === 'host';
-    const canInteract = isSolo() || network.playerRole === 'guest';
     const runes = ['\u16A0', '\u16A2', '\u16A6', '\u16B1', '\u16B7', '\u16C1', '\u16C7', '\u16D2', '\u16DA', '\u16DE', '\u16E3', '\u16E7'];
-    const numPairs = 5 + Math.floor(this.currentRoom / 3);
+    const numPairs = 5 + Math.floor(this.currentRoom / 2);
     const selected = runes.slice(0, numPairs);
 
-    // Generate matching pairs but shuffled separately for each player
     const leftRunes = [...selected].sort(() => Math.random() - 0.5);
     const rightRunes = [...selected].sort(() => Math.random() - 0.5);
 
-    this.runeAnswer = new Array(numPairs).fill(-1);
-
     this.roomContainer.add(
-      this.add.text(cx, 78, isSolo()
-        ? 'Match the runes! Click right side\nto cycle numbers until pairs match.'
-        : isHost
-          ? 'You see the LEFT runes. Tell your partner\nwhich right rune matches each!'
-          : 'Match the runes! Your partner sees the left side.', {
+      this.add.text(cx, 76, 'Tap a rune on the LEFT, then its twin on the RIGHT.', {
         fontFamily: '"Rajdhani"',
-        fontSize: '22px',
-        color: LEGO_COLORS.ORANGE,
+        fontSize: '26px',
+        fontStyle: 'bold',
+        color: LEGO_COLORS.CYAN,
         align: 'center',
-        lineSpacing: 5
+        stroke: '#000000',
+        strokeThickness: 3
       }).setOrigin(0.5)
     );
 
-    // Left runes (host sees with labels)
-    leftRunes.forEach((rune, i) => {
-      const y = 100 + i * 50;
-      const runeText = this.add.text(cx - 200, y, rune, {
-        fontSize: '28px',
-        color: isHost ? LEGO_COLORS.ORANGE : LEGO_COLORS.DARK_GREY
+    this.runeSelectedLeft = -1;
+    this.runeMatched = new Set();
+    const leftItems = [];
+    const rightItems = [];
+
+    const buildRune = (rune, x, y, side, idx) => {
+      const bg = this.add.graphics();
+      bg.fillStyle(0x2A1812, 1);
+      bg.fillRoundedRect(x - 52, y - 32, 104, 64, 10);
+      bg.lineStyle(2, hexToInt(LEGO_COLORS.ORANGE), 0.6);
+      bg.strokeRoundedRect(x - 52, y - 32, 104, 64, 10);
+      this.roomContainer.add(bg);
+
+      const runeText = this.add.text(x, y, rune, {
+        fontSize: '44px',
+        color: LEGO_COLORS.ORANGE,
+        stroke: '#000000',
+        strokeThickness: 3
       }).setOrigin(0.5);
       this.roomContainer.add(runeText);
 
-      if (isHost) {
-        this.roomContainer.add(
-          this.add.text(cx - 150, y, `= ${selected.indexOf(leftRunes[i]) + 1}`, {
-            fontFamily: '"Rajdhani"',
-            fontSize: '22px',
-            color: LEGO_COLORS.GREY
-          }).setOrigin(0, 0.5)
-        );
-      }
-    });
+      const hit = this.add.rectangle(x, y, 110, 70, 0x000000, 0);
+      hit.setInteractive({ useHandCursor: true });
+      this.roomContainer.add(hit);
 
-    // Right runes (guest can click to assign)
-    this.rightRuneSlots = [];
-    rightRunes.forEach((rune, i) => {
-      const y = 100 + i * 50;
-      const runeText = this.add.text(cx + 200, y, rune, {
-        fontSize: '28px',
-        color: LEGO_COLORS.ORANGE
-      }).setOrigin(0.5);
-      this.roomContainer.add(runeText);
+      return { bg, text: runeText, hit, x, y, side, idx, rune, locked: false };
+    };
 
-      const numLabel = this.add.text(cx + 150, y, '-', {
-        fontFamily: '"Rajdhani"',
-        fontSize: '28px',
-        color: LEGO_COLORS.GREY
-      }).setOrigin(0.5);
-      this.roomContainer.add(numLabel);
+    const rowY = (i, n) => {
+      const gap = Math.min(72, (GAME_HEIGHT - 260) / Math.max(n - 1, 1));
+      return 150 + i * gap;
+    };
 
-      if (canInteract) {
-        const hitArea = this.add.rectangle(cx + 200, y, 80, 40, 0x000000, 0);
-        hitArea.setInteractive({ useHandCursor: true });
-        const idx = i;
-        hitArea.on('pointerdown', () => {
-          this.runeAnswer[idx] = (this.runeAnswer[idx] + 1) % (numPairs + 1);
-          const val = this.runeAnswer[idx] === 0 ? '-' : this.runeAnswer[idx].toString();
-          numLabel.setText(val);
-          network.sendPuzzleAction('rune_set', { slot: idx, value: this.runeAnswer[idx] });
-        });
-        this.roomContainer.add(hitArea);
-      }
+    leftRunes.forEach((r, i) => leftItems.push(buildRune(r, cx - 230, rowY(i, numPairs), 'L', i)));
+    rightRunes.forEach((r, i) => rightItems.push(buildRune(r, cx + 230, rowY(i, numPairs), 'R', i)));
 
-      this.rightRuneSlots.push({ numLabel });
-    });
-
-    // Check
-    const checkBtn = this.createButton(cx, GAME_HEIGHT - 70, 'VERIFY', () => {
-      // Check if the assignments create correct pairs
-      const correct = rightRunes.every((rune, i) => {
-        const assignedNum = this.runeAnswer[i];
-        return assignedNum > 0 && leftRunes[assignedNum - 1] === rune;
-      });
-
-      if (correct) {
-        this.showSuccess('RUNES ALIGNED!');
+    const redraw = (item, mode) => {
+      item.bg.clear();
+      if (mode === 'locked') {
+        item.bg.fillStyle(hexToInt(LEGO_COLORS.GREEN), 0.3);
+        item.bg.lineStyle(3, hexToInt(LEGO_COLORS.GREEN), 1);
+      } else if (mode === 'selected') {
+        item.bg.fillStyle(hexToInt(LEGO_COLORS.CYAN), 0.25);
+        item.bg.lineStyle(3, hexToInt(LEGO_COLORS.CYAN), 1);
       } else {
-        this.showError('The dark tongue rejects you!');
+        item.bg.fillStyle(0x2A1812, 1);
+        item.bg.lineStyle(2, hexToInt(LEGO_COLORS.ORANGE), 0.6);
       }
-    });
-    this.roomContainer.add(checkBtn);
+      item.bg.fillRoundedRect(item.x - 52, item.y - 32, 104, 64, 10);
+      item.bg.strokeRoundedRect(item.x - 52, item.y - 32, 104, 64, 10);
+    };
 
-    // Register focusables for controller navigation
-    const runeFocusables = rightRunes.map((rune, i) => ({
-      element: null, x: cx + 200, y: 100 + i * 50, callback: () => {
-        this.runeAnswer[i] = (this.runeAnswer[i] + 1) % (numPairs + 1);
-        const val = this.runeAnswer[i] === 0 ? '-' : this.runeAnswer[i].toString();
-        this.rightRuneSlots[i].numLabel.setText(val);
-        network.sendPuzzleAction('rune_set', { slot: i, value: this.runeAnswer[i] });
+    const checkComplete = () => {
+      if (this.runeMatched.size >= numPairs) {
+        this.showSuccess('RUNES ALIGNED!');
       }
-    }));
-    runeFocusables.push({ element: checkBtn, x: cx, y: GAME_HEIGHT - 70, callback: () => checkBtn.emit('pointerdown') });
-    InputSystem.setFocusables(runeFocusables);
+    };
+
+    const handleLeft = (i) => {
+      if (leftItems[i].locked) return;
+      if (this.runeSelectedLeft === i) { redraw(leftItems[i], 'idle'); this.runeSelectedLeft = -1; return; }
+      if (this.runeSelectedLeft >= 0) redraw(leftItems[this.runeSelectedLeft], 'idle');
+      this.runeSelectedLeft = i;
+      redraw(leftItems[i], 'selected');
+      InputSystem.vibrate(30, 0.1, 0.1);
+    };
+
+    const handleRight = (j) => {
+      if (rightItems[j].locked) return;
+      if (this.runeSelectedLeft < 0) {
+        this.cameras.main.shake(120, 0.003);
+        return;
+      }
+      const li = this.runeSelectedLeft;
+      if (leftItems[li].rune === rightItems[j].rune) {
+        leftItems[li].locked = true;
+        rightItems[j].locked = true;
+        redraw(leftItems[li], 'locked');
+        redraw(rightItems[j], 'locked');
+        this.runeMatched.add(leftItems[li].rune);
+        this.runeSelectedLeft = -1;
+        network.sendPuzzleAction('rune_match', { rune: leftItems[li].rune });
+        InputSystem.vibrate(80, 0.3, 0.5);
+        checkComplete();
+      } else {
+        // Wrong - shake both briefly
+        const targets = [leftItems[li].text, rightItems[j].text];
+        const origX = targets.map(t => t.x);
+        this.tweens.add({
+          targets, x: '+=8', duration: 60, yoyo: true, repeat: 3,
+          onComplete: () => targets.forEach((t, k) => t.setX(origX[k]))
+        });
+        redraw(leftItems[li], 'idle');
+        this.runeSelectedLeft = -1;
+        InputSystem.vibrate(120, 0.5, 0.6);
+      }
+    };
+
+    leftItems.forEach((item, i) => item.hit.on('pointerdown', () => handleLeft(i)));
+    rightItems.forEach((item, j) => item.hit.on('pointerdown', () => handleRight(j)));
+
+    // Controller focus - interleave L/R so d-pad left/right works naturally
+    const focusables = [];
+    for (let i = 0; i < numPairs; i++) {
+      focusables.push({ element: null, x: leftItems[i].x, y: leftItems[i].y, callback: () => handleLeft(i) });
+      focusables.push({ element: null, x: rightItems[i].x, y: rightItems[i].y, callback: () => handleRight(i) });
+    }
+    InputSystem.setFocusables(focusables);
+
+    this.rightRuneSlots = rightItems.map(item => ({ item, redraw: (m) => redraw(item, m) }));
   }
 
   // PUZZLE 2: Eye of Sauron - dodge the sweeping eye beam
@@ -467,19 +491,44 @@ class Chapter3Scene extends Phaser.Scene {
     const symbols = ['\u25B2', '\u25B6', '\u25BC', '\u25C0', '\u25C6', '\u2726']; // arrows + diamond + star
     this.towerSections = [];
 
+    // Solo: flash target for 2.5s then hide (memory game). Co-op host: keeps seeing it.
+    const targetLabels = [];
     for (let i = 0; i < sections; i++) {
       const y = 95 + i * 72;
 
-      // Target (host only)
       if (isHost) {
-        this.roomContainer.add(
-          this.add.text(cx - 150, y + 15, `Section ${i + 1}: ${symbols[targetPositions[i]]}`, {
-            fontFamily: '"Rajdhani"',
-            fontSize: '22px',
-            color: LEGO_COLORS.YELLOW
-          }).setOrigin(0.5)
-        );
+        const lbl = this.add.text(cx - 150, y + 15, `Section ${i + 1}: ${symbols[targetPositions[i]]}`, {
+          fontFamily: '"Rajdhani"',
+          fontSize: '24px',
+          fontStyle: 'bold',
+          color: LEGO_COLORS.YELLOW,
+          stroke: '#000000',
+          strokeThickness: 2
+        }).setOrigin(0.5);
+        this.roomContainer.add(lbl);
+        targetLabels.push(lbl);
       }
+    }
+    if (isSolo() && targetLabels.length) {
+      // Show "MEMORISE" banner, then hide the answer
+      const memBanner = this.add.text(cx, 50, 'MEMORISE THE TARGETS...', {
+        fontFamily: '"Rajdhani"', fontSize: '26px', fontStyle: 'bold',
+        color: LEGO_COLORS.YELLOW, stroke: '#000000', strokeThickness: 3
+      }).setOrigin(0.5).setDepth(50);
+      this.roomContainer.add(memBanner);
+      this.time.delayedCall(2800, () => {
+        targetLabels.forEach((l, idx) => {
+          l.setText(`Section ${idx + 1}: ?`);
+          l.setColor(LEGO_COLORS.GREY);
+        });
+        memBanner.setText('GO! Rotate sections from memory');
+        memBanner.setColor(LEGO_COLORS.CYAN);
+        this.tweens.add({ targets: memBanner, alpha: 0, duration: 1500, delay: 800 });
+      });
+    }
+
+    for (let i = 0; i < sections; i++) {
+      const y = 95 + i * 72;
 
       // Tower section (rotatable)
       const sectionGfx = this.add.graphics();
@@ -573,13 +622,29 @@ class Chapter3Scene extends Phaser.Scene {
       }).setOrigin(0.5)
     );
 
-    // Show order to host
-    if (isHost) {
+    // Solo: show a riddle hint with initials instead of the full answer
+    // Co-op host: still sees the full order to relay
+    if (isSolo()) {
+      const initials = correctOrder.map(n => n[0]).join(' > ');
+      this.roomContainer.add(
+        this.add.text(cx, 110, 'RIDDLE: ' + initials, {
+          fontFamily: '"Rajdhani"', fontSize: '28px', fontStyle: 'bold',
+          color: LEGO_COLORS.YELLOW, stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5)
+      );
+      this.roomContainer.add(
+        this.add.text(cx, 140, 'First the wizard, last the creature who craved it most.', {
+          fontFamily: '"Rajdhani"', fontSize: '20px', fontStyle: 'italic',
+          color: '#BBCCDD'
+        }).setOrigin(0.5)
+      );
+    } else if (isHost) {
       correctOrder.forEach((name, i) => {
         this.roomContainer.add(
-          this.add.text(cx, 95 + i * 18, `${i + 1}. ${name}`, {
+          this.add.text(cx, 95 + i * 22, `${i + 1}. ${name}`, {
             fontFamily: '"Rajdhani"',
             fontSize: '22px',
+            fontStyle: 'bold',
             color: LEGO_COLORS.YELLOW
           }).setOrigin(0.5)
         );
@@ -624,19 +689,23 @@ class Chapter3Scene extends Phaser.Scene {
       btn.setSize(100, 36);
       btn.setInteractive({ useHandCursor: true });
       btn.on('pointerdown', () => {
+        const nextIdx = this.ringOrder.length;
+        const expected = correctOrder[nextIdx];
+        if (name !== expected) {
+          // Immediate feedback on wrong pick - reset and shake
+          this.cameras.main.shake(180, 0.004);
+          InputSystem.vibrate(120, 0.5, 0.5);
+          this.ringOrder = [];
+          this.ringDisplay.setText('');
+          this.showError('Wrong bearer! Start again.');
+          return;
+        }
         this.ringOrder.push(name);
         this.ringDisplay.setText(this.ringOrder.map((n, j) => `${j + 1}. ${n}`).join('\n'));
         network.sendPuzzleAction('ring_pass', { to: name });
-
+        InputSystem.vibrate(40, 0.2, 0.2);
         if (this.ringOrder.length === correctOrder.length) {
-          const correct = correctOrder.every((n, j) => this.ringOrder[j] === n);
-          if (correct) {
-            this.showSuccess('The Ring reaches Mount Doom!');
-          } else {
-            this.ringOrder = [];
-            this.ringDisplay.setText('');
-            this.showError('The Ring rejects this path!');
-          }
+          this.showSuccess('The Ring reaches Mount Doom!');
         }
       });
       this.roomContainer.add(btn);
@@ -647,18 +716,19 @@ class Chapter3Scene extends Phaser.Scene {
       const bx = cx - 280 + (i % 3) * 180;
       const by = GAME_HEIGHT / 2 + 70 + Math.floor(i / 3) * 50;
       return { element: null, x: bx, y: by, callback: () => {
+        const nextIdx = this.ringOrder.length;
+        if (name !== correctOrder[nextIdx]) {
+          this.cameras.main.shake(180, 0.004);
+          this.ringOrder = [];
+          this.ringDisplay.setText('');
+          this.showError('Wrong bearer! Start again.');
+          return;
+        }
         this.ringOrder.push(name);
         this.ringDisplay.setText(this.ringOrder.map((n, j) => `${j + 1}. ${n}`).join('\n'));
         network.sendPuzzleAction('ring_pass', { to: name });
         if (this.ringOrder.length === correctOrder.length) {
-          const correct = correctOrder.every((n, j) => this.ringOrder[j] === n);
-          if (correct) {
-            this.showSuccess('The Ring reaches Mount Doom!');
-          } else {
-            this.ringOrder = [];
-            this.ringDisplay.setText('');
-            this.showError('The Ring rejects this path!');
-          }
+          this.showSuccess('The Ring reaches Mount Doom!');
         }
       }};
     });
