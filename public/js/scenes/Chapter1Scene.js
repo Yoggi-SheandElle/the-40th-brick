@@ -781,11 +781,12 @@ class Chapter1Scene extends Phaser.Scene {
           this.selectedBrick = idx;
         } else {
           // Swap
-          const temp = this.buildOrder[this.selectedBrick];
-          this.buildOrder[this.selectedBrick] = this.buildOrder[idx];
+          const fromIdx = this.selectedBrick;
+          const temp = this.buildOrder[fromIdx];
+          this.buildOrder[fromIdx] = this.buildOrder[idx];
           this.buildOrder[idx] = temp;
           this.selectedBrick = -1;
-          network.sendPuzzleAction('brick_swap', { a: this.selectedBrick, b: idx });
+          network.sendPuzzleAction('brick_swap', { a: fromIdx, b: idx });
         }
         redrawBricks();
       });
